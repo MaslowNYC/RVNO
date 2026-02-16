@@ -31,18 +31,35 @@ export type Member = {
   created_at: string;
 };
 
+export type AlbumInsert = {
+  title: string;
+  description?: string | null;
+  event_date: string;
+  location_name?: string;
+  location_lat?: number | null;
+  location_lng?: number | null;
+  cover_photo_url?: string | null;
+};
+
+export type PhotoInsert = {
+  album_id: string;
+  url: string;
+  caption?: string | null;
+  sort_order?: number;
+};
+
 export type Database = {
   public: {
     Tables: {
       albums: {
         Row: Album;
-        Insert: Omit<Album, "id" | "created_at" | "updated_at">;
-        Update: Partial<Omit<Album, "id" | "created_at">>;
+        Insert: AlbumInsert;
+        Update: Partial<AlbumInsert>;
       };
       photos: {
         Row: Photo;
-        Insert: Omit<Photo, "id" | "created_at">;
-        Update: Partial<Omit<Photo, "id" | "created_at">>;
+        Insert: PhotoInsert;
+        Update: Partial<PhotoInsert>;
       };
       members: {
         Row: Member;
