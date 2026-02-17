@@ -16,25 +16,25 @@ export function Header() {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-rvno-bg/92 backdrop-blur-md">
+    <header className="sticky top-0 z-50 border-b border-rvno-border bg-rvno-card/95 backdrop-blur-md">
       <div className="max-w-5xl mx-auto px-5 py-3 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2.5 no-underline">
-          <span className="font-display text-base font-bold text-rvno-ink tracking-tight">
+          <span className="font-display text-xl font-bold text-rvno-ink tracking-tight">
             RVNO
           </span>
-          <span className="font-mono text-[8px] text-rvno-teal tracking-[1.5px] uppercase">
+          <span className="font-mono text-xs text-rvno-teal tracking-[1.5px] uppercase font-medium">
             Est. 1986
           </span>
         </Link>
 
-        <nav className="hidden md:flex items-center gap-5">
+        <nav className="hidden md:flex items-center gap-6">
           {NAV_ITEMS.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className={`font-mono text-[12px] tracking-wide no-underline transition-colors ${
+              className={`font-body text-base tracking-wide no-underline transition-colors min-h-[44px] flex items-center ${
                 pathname === item.href
-                  ? "text-rvno-teal"
+                  ? "text-rvno-teal font-bold"
                   : "text-rvno-ink-muted hover:text-rvno-teal"
               }`}
             >
@@ -44,7 +44,7 @@ export function Header() {
         </nav>
 
         {/* Mobile menu - simple for now */}
-        <button className="md:hidden font-mono text-xs text-rvno-ink-muted">
+        <button className="md:hidden font-body text-base text-rvno-ink-muted min-h-[44px] px-3">
           Menu
         </button>
       </div>

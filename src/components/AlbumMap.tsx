@@ -90,7 +90,7 @@ export function AlbumMap({
 
   if (mappablePhotos.length === 0) {
     return (
-      <div className="max-w-[760px] mx-auto bg-rvno-card rounded-md border border-white/[0.06] p-9 text-center min-h-[360px] flex flex-col items-center justify-center gap-3.5">
+      <div className="max-w-[760px] mx-auto bg-rvno-card rounded-md border border-rvno-border p-9 text-center min-h-[360px] flex flex-col items-center justify-center gap-3.5">
         <div className="w-11 h-11 rounded-full bg-gradient-to-br from-rvno-teal to-rvno-teal-dark flex items-center justify-center text-lg">
           🗺️
         </div>
@@ -107,7 +107,7 @@ export function AlbumMap({
 
   if (loadError) {
     return (
-      <div className="max-w-[760px] mx-auto bg-rvno-card rounded-md border border-white/[0.06] p-9 text-center">
+      <div className="max-w-[760px] mx-auto bg-rvno-card rounded-md border border-rvno-border p-9 text-center">
         <p className="text-rvno-ink-muted">Error loading map</p>
       </div>
     );
@@ -115,7 +115,7 @@ export function AlbumMap({
 
   if (!isLoaded) {
     return (
-      <div className="max-w-[760px] mx-auto bg-rvno-card rounded-md border border-white/[0.06] p-9 text-center min-h-[500px] flex items-center justify-center">
+      <div className="max-w-[760px] mx-auto bg-rvno-card rounded-md border border-rvno-border p-9 text-center min-h-[500px] flex items-center justify-center">
         <p className="text-rvno-ink-muted">Loading map...</p>
       </div>
     );
@@ -123,7 +123,7 @@ export function AlbumMap({
 
   return (
     <div className="max-w-[760px] mx-auto">
-      <div className="rounded-md overflow-hidden border border-white/[0.06]">
+      <div className="rounded-md overflow-hidden border border-rvno-border">
         <GoogleMap
           mapContainerStyle={mapContainerStyle}
           center={center}
@@ -150,7 +150,7 @@ export function AlbumMap({
                 scale: 8,
                 fillColor: "#D4582A",
                 fillOpacity: 1,
-                strokeColor: "#2C2A26",
+                strokeColor: "#1A1A1F",
                 strokeWeight: 2,
               }}
             />
@@ -199,7 +199,7 @@ export function AlbumMap({
                     style={{
                       fontFamily: "'IBM Plex Mono', monospace",
                       fontSize: "10px",
-                      color: "#4AABB8",
+                      color: "#1D7A86",
                       letterSpacing: "0.5px",
                     }}
                   >

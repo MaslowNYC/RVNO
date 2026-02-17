@@ -41,23 +41,23 @@ export function HomeContent({ albums, photos, members }: HomeContentProps) {
         />
       </div>
 
-      {/* View toggle */}
-      <div className="flex justify-center pb-2 gap-1">
+      {/* View toggle - large, obvious buttons */}
+      <div className="flex justify-center pb-4 gap-2">
         {[
-          { key: "crew" as const, label: "The Crew", icon: "👥" },
-          { key: "road" as const, label: "The Road", icon: "⟿" },
-          { key: "map" as const, label: "The Map", icon: "◎" },
+          { key: "crew" as const, label: "The Crew" },
+          { key: "road" as const, label: "The Road" },
+          { key: "map" as const, label: "The Map" },
         ].map((v) => (
           <button
             key={v.key}
             onClick={() => setView(v.key)}
-            className={`px-4 py-1.5 rounded font-mono text-[10px] tracking-wide transition-all border ${
+            className={`px-6 py-3 rounded-lg font-body text-base font-semibold tracking-wide transition-all min-h-[48px] ${
               view === v.key
-                ? "bg-rvno-teal-dark text-rvno-white border-rvno-teal"
-                : "bg-transparent text-rvno-ink-dim border-transparent hover:text-rvno-ink-muted"
+                ? "bg-rvno-teal text-white shadow-md"
+                : "bg-rvno-card text-rvno-ink-muted border-2 border-rvno-border hover:border-rvno-teal hover:text-rvno-ink"
             }`}
           >
-            {v.icon} {v.label}
+            {v.label}
           </button>
         ))}
       </div>

@@ -9,33 +9,54 @@
 }
 
 html {
-  font-size: 120%; /* 20% larger than original */
+  font-size: 112.5%; /* 18px base for better readability */
 }
 
 body {
-  background: #1A1A1F;
-  color: #F2EFE8;
+  background: #F5F0E8;
+  color: #1A1A1F;
   font-family: 'Atkinson Hyperlegible', system-ui, sans-serif;
+  line-height: 1.6;
 }
 
 ::selection {
-  background: rgba(74, 171, 184, 0.3);
-  color: #F0ECE4;
+  background: rgba(29, 122, 134, 0.25);
+  color: #1A1A1F;
 }
 
 /* Scrollbar styling */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #1A1A1F;
+  background: #EDE8E0;
 }
 ::-webkit-scrollbar-thumb {
-  background: #3A3730;
-  border-radius: 3px;
+  background: #C4BDB2;
+  border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #4AABB8;
+  background: #1D7A86;
+}
+
+/* Ensure minimum touch targets */
+button, a, input, select, textarea {
+  min-height: 44px;
+}
+
+/* Links should be obvious */
+a {
+  color: #1D7A86;
+}
+a:hover {
+  color: #155A63;
+  text-decoration: underline;
+}
+
+/* Form inputs - chunky and visible */
+input, select, textarea {
+  font-size: 1rem;
+  padding: 0.75rem 1rem;
 }
 
 @keyframes fadeIn {

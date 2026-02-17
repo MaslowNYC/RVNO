@@ -5,7 +5,7 @@ export default function AboutPage() {
         <h1 className="font-display text-3xl font-bold text-rvno-ink mb-2">
           About RVNO
         </h1>
-        <p className="font-body text-sm text-rvno-teal italic">
+        <p className="font-body text-lg text-rvno-teal italic">
           Keeping Nortons alive in the Blue Ridge
         </p>
       </header>
@@ -14,7 +14,7 @@ export default function AboutPage() {
         <h2 className="font-display text-xl font-semibold text-rvno-ink mb-4">
           How We Got Started
         </h2>
-        <div className="space-y-4 font-body text-sm text-rvno-ink-muted leading-relaxed">
+        <div className="space-y-4 font-body text-base text-rvno-ink-muted leading-relaxed">
           <p>
             When Dave Youngblood moved to Roanoke, Virginia in 1980 with his 750
             Commando, he also brought along his passion for Norton motorcycles. In
@@ -41,7 +41,7 @@ export default function AboutPage() {
         <h2 className="font-display text-xl font-semibold text-rvno-ink mb-4">
           What We&apos;re About
         </h2>
-        <div className="font-body text-sm text-rvno-ink-muted leading-relaxed mb-4">
+        <div className="font-body text-base text-rvno-ink-muted leading-relaxed mb-4">
           At its heart, RVNO is about three things:
         </div>
         <div className="space-y-3 mb-4">
@@ -61,18 +61,18 @@ export default function AboutPage() {
           ].map((item) => (
             <div
               key={item.title}
-              className="border-l-2 border-rvno-teal/30 pl-4"
+              className="border-l-4 border-rvno-teal pl-4 py-1"
             >
-              <span className="font-display text-sm font-semibold text-rvno-ink">
+              <span className="font-display text-base font-semibold text-rvno-ink">
                 {item.title}:
               </span>{" "}
-              <span className="font-body text-sm text-rvno-ink-muted">
+              <span className="font-body text-base text-rvno-ink-muted">
                 {item.text}
               </span>
             </div>
           ))}
         </div>
-        <p className="font-body text-sm text-rvno-ink-muted leading-relaxed">
+        <p className="font-body text-base text-rvno-ink-muted leading-relaxed">
           We&apos;re a laid-back group that welcomes anyone with an appreciation
           for Norton motorcycles — whether you own one, used to own one, or just
           think they&apos;re pretty neat. No membership dues, no complicated
@@ -84,7 +84,7 @@ export default function AboutPage() {
         <h2 className="font-display text-xl font-semibold text-rvno-ink mb-4">
           Our Backyard: The Blue Ridge Mountains
         </h2>
-        <div className="space-y-4 font-body text-sm text-rvno-ink-muted leading-relaxed">
+        <div className="space-y-4 font-body text-base text-rvno-ink-muted leading-relaxed">
           <p>
             The Roanoke Valley sits right in the heart of Virginia&apos;s Blue
             Ridge Mountains, which means we&apos;re blessed with some of the
@@ -103,11 +103,11 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section className="bg-rvno-card rounded-lg border border-white/[0.06] p-6">
+      <section className="bg-rvno-card rounded-lg border-2 border-rvno-border p-6">
         <h2 className="font-display text-xl font-semibold text-rvno-ink mb-3">
           Part of Something Bigger
         </h2>
-        <p className="font-body text-sm text-rvno-ink-muted leading-relaxed mb-4">
+        <p className="font-body text-base text-rvno-ink-muted leading-relaxed mb-4">
           RVNO is proud to be affiliated with the International Norton Owners
           Association (INOA), a worldwide organization dedicated to the
           preservation and enjoyment of Norton motorcycles. Through INOA, we
@@ -121,7 +121,7 @@ export default function AboutPage() {
           href="https://www.inoanorton.com/"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-block font-mono text-xs text-rvno-teal hover:text-rvno-dot-hover transition-colors tracking-wide"
+          className="inline-block font-body text-base font-semibold text-rvno-teal hover:text-rvno-teal-dark transition-colors"
         >
           Visit INOA →
         </a>

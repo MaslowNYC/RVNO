@@ -90,14 +90,14 @@ export default function AdminPage() {
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full bg-rvno-card border border-white/[0.06] rounded px-3 py-2.5 font-mono text-sm text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
+            className="w-full bg-rvno-card border-2 border-rvno-border rounded-lg px-4 py-3 font-body text-base text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
           />
           <input
             type="password"
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-rvno-card border border-white/[0.06] rounded px-3 py-2.5 font-mono text-sm text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
+            className="w-full bg-rvno-card border-2 border-rvno-border rounded-lg px-4 py-3 font-body text-base text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
           />
           {authError && (
             <p className="font-mono text-xs text-rvno-dot">{authError}</p>
@@ -121,7 +121,7 @@ export default function AdminPage() {
         </h1>
         <button
           onClick={handleLogout}
-          className="font-mono text-[10px] text-rvno-ink-dim hover:text-rvno-teal tracking-wide"
+          className="font-body text-sm text-rvno-ink-dim hover:text-rvno-teal tracking-wide"
         >
           Sign Out
         </button>
@@ -152,7 +152,7 @@ export default function AdminPage() {
         <>
           <button
             onClick={() => setShowNewAlbum(!showNewAlbum)}
-            className="mb-6 bg-rvno-teal-dark text-rvno-white font-mono text-sm px-4 py-2 rounded hover:bg-rvno-teal transition-colors"
+            className="mb-6 bg-rvno-teal text-white font-body text-base font-semibold px-6 py-3 rounded-lg min-h-[48px] hover:bg-rvno-teal transition-colors"
           >
             + New Album
           </button>
@@ -185,7 +185,7 @@ export default function AdminPage() {
         <>
           <button
             onClick={() => setShowNewMember(!showNewMember)}
-            className="mb-6 bg-rvno-teal-dark text-rvno-white font-mono text-sm px-4 py-2 rounded hover:bg-rvno-teal transition-colors"
+            className="mb-6 bg-rvno-teal text-white font-body text-base font-semibold px-6 py-3 rounded-lg min-h-[48px] hover:bg-rvno-teal transition-colors"
           >
             + New Member
           </button>
@@ -254,14 +254,14 @@ function NewAlbumForm({ onCreated }: { onCreated: () => void }) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-rvno-card rounded-lg border border-white/[0.06] p-5 mb-6 space-y-3"
+      className="bg-rvno-card rounded-lg border border-rvno-border p-5 mb-6 space-y-3"
     >
       <input
         type="text"
         placeholder="Album title (e.g., Blue Ridge Fall Ride)"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        className="w-full bg-rvno-elevated border border-white/[0.06] rounded px-3 py-2 font-mono text-sm text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
+        className="w-full bg-rvno-elevated border-2 border-rvno-border rounded-lg px-4 py-3 font-body text-base text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
         required
       />
       <div className="grid grid-cols-2 gap-3">
@@ -269,7 +269,7 @@ function NewAlbumForm({ onCreated }: { onCreated: () => void }) {
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="bg-rvno-elevated border border-white/[0.06] rounded px-3 py-2 font-mono text-sm text-rvno-ink focus:outline-none focus:border-rvno-teal/40"
+          className="bg-rvno-elevated border-2 border-rvno-border rounded-lg px-4 py-3 font-body text-base text-rvno-ink focus:outline-none focus:border-rvno-teal/40"
           required
         />
         <input
@@ -277,7 +277,7 @@ function NewAlbumForm({ onCreated }: { onCreated: () => void }) {
           placeholder="Location name"
           value={location}
           onChange={(e) => setLocation(e.target.value)}
-          className="bg-rvno-elevated border border-white/[0.06] rounded px-3 py-2 font-mono text-sm text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
+          className="bg-rvno-elevated border-2 border-rvno-border rounded-lg px-4 py-3 font-body text-base text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
         />
       </div>
       <div className="grid grid-cols-2 gap-3">
@@ -286,17 +286,17 @@ function NewAlbumForm({ onCreated }: { onCreated: () => void }) {
           placeholder="Latitude (e.g., 37.27)"
           value={lat}
           onChange={(e) => setLat(e.target.value)}
-          className="bg-rvno-elevated border border-white/[0.06] rounded px-3 py-2 font-mono text-sm text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
+          className="bg-rvno-elevated border-2 border-rvno-border rounded-lg px-4 py-3 font-body text-base text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
         />
         <input
           type="text"
           placeholder="Longitude (e.g., -79.94)"
           value={lng}
           onChange={(e) => setLng(e.target.value)}
-          className="bg-rvno-elevated border border-white/[0.06] rounded px-3 py-2 font-mono text-sm text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
+          className="bg-rvno-elevated border-2 border-rvno-border rounded-lg px-4 py-3 font-body text-base text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
         />
       </div>
-      <p className="font-mono text-[9px] text-rvno-ink-dim">
+      <p className="font-body text-sm text-rvno-ink-dim">
         Coordinates are optional — photos with GPS data will auto-fill these
         on first upload.
       </p>
@@ -305,12 +305,12 @@ function NewAlbumForm({ onCreated }: { onCreated: () => void }) {
         value={description}
         onChange={(e) => setDescription(e.target.value)}
         rows={2}
-        className="w-full bg-rvno-elevated border border-white/[0.06] rounded px-3 py-2 font-mono text-sm text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40 resize-none"
+        className="w-full bg-rvno-elevated border-2 border-rvno-border rounded-lg px-4 py-3 font-body text-base text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40 resize-none"
       />
       <button
         type="submit"
         disabled={saving}
-        className="bg-rvno-teal-dark text-rvno-white font-mono text-sm px-4 py-2 rounded hover:bg-rvno-teal transition-colors disabled:opacity-50"
+        className="bg-rvno-teal text-white font-body text-base font-semibold px-6 py-3 rounded-lg min-h-[48px] hover:bg-rvno-teal transition-colors disabled:opacity-50"
       >
         {saving ? "Creating..." : "Create Album"}
       </button>
@@ -472,7 +472,7 @@ function AlbumRow({
   }
 
   return (
-    <div className="bg-rvno-card rounded-lg border border-white/[0.06] p-4">
+    <div className="bg-rvno-card rounded-lg border border-rvno-border p-4">
       <div className="flex items-center justify-between">
         <div
           className="flex-1 cursor-pointer"
@@ -484,7 +484,7 @@ function AlbumRow({
           <h3 className="font-display text-sm font-semibold text-rvno-ink">
             {album.title}
           </h3>
-          <p className="font-mono text-[10px] text-rvno-teal tracking-wide mt-0.5">
+          <p className="font-body text-sm text-rvno-teal tracking-wide mt-0.5">
             {new Date(album.event_date + "T00:00:00").toLocaleDateString(
               "en-US",
               { month: "long", day: "numeric", year: "numeric" }
@@ -498,13 +498,13 @@ function AlbumRow({
         <div className="flex items-center gap-2">
           <a
             href={`/album/${album.id}`}
-            className="font-mono text-[9px] text-rvno-ink-dim hover:text-rvno-teal tracking-wide"
+            className="font-body text-sm text-rvno-ink-dim hover:text-rvno-teal tracking-wide"
           >
             View
           </a>
           <button
             onClick={deleteAlbum}
-            className="font-mono text-[9px] text-rvno-ink-dim hover:text-rvno-dot tracking-wide"
+            className="font-body text-sm text-rvno-ink-dim hover:text-rvno-dot tracking-wide"
           >
             Delete
           </button>
@@ -512,8 +512,8 @@ function AlbumRow({
       </div>
 
       {expanded && (
-        <div className="mt-4 pt-3 border-t border-white/[0.06]">
-          <label className="inline-block bg-rvno-elevated border border-white/[0.06] rounded px-3 py-1.5 font-mono text-xs text-rvno-ink-muted hover:text-rvno-teal hover:border-rvno-teal/20 transition-colors cursor-pointer mb-3">
+        <div className="mt-4 pt-3 border-t border-rvno-border">
+          <label className="inline-block bg-rvno-elevated border border-rvno-border rounded px-3 py-1.5 font-mono text-xs text-rvno-ink-muted hover:text-rvno-teal hover:border-rvno-teal/20 transition-colors cursor-pointer mb-3">
             {uploading ? "Uploading..." : "+ Add Photos"}
             <input
               type="file"
@@ -554,7 +554,7 @@ function AlbumRow({
           )}
 
           {photos.length === 0 && !uploading && (
-            <p className="font-mono text-[10px] text-rvno-ink-dim">
+            <p className="font-body text-sm text-rvno-ink-dim">
               No photos yet. Click &quot;+ Add Photos&quot; to upload some.
             </p>
           )}
@@ -616,7 +616,7 @@ function PhotoEditModal({
 
   return (
     <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-      <div className="bg-rvno-elevated rounded-lg border border-white/[0.06] max-w-md w-full p-5">
+      <div className="bg-rvno-elevated rounded-lg border border-rvno-border max-w-md w-full p-5">
         <div className="flex items-start gap-4 mb-4">
           <img
             src={photo.url}
@@ -627,7 +627,7 @@ function PhotoEditModal({
             <h3 className="font-display text-sm font-semibold text-rvno-ink mb-1">
               Edit Photo
             </h3>
-            <p className="font-mono text-[9px] text-rvno-ink-dim">
+            <p className="font-body text-sm text-rvno-ink-dim">
               {photo.location_lat
                 ? `📍 ${photo.location_lat.toFixed(4)}, ${photo.location_lng?.toFixed(4)}`
                 : "No GPS data"}
@@ -637,7 +637,7 @@ function PhotoEditModal({
 
         <div className="space-y-3">
           <div>
-            <label className="font-mono text-[9px] text-rvno-ink-dim uppercase tracking-wide block mb-1">
+            <label className="font-body text-sm text-rvno-ink-dim uppercase tracking-wide block mb-1">
               Caption
             </label>
             <input
@@ -645,25 +645,25 @@ function PhotoEditModal({
               value={caption}
               onChange={(e) => setCaption(e.target.value)}
               placeholder="Add a caption..."
-              className="w-full bg-rvno-card border border-white/[0.06] rounded px-3 py-2 font-mono text-sm text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
+              className="w-full bg-rvno-card border-2 border-rvno-border rounded-lg px-4 py-3 font-body text-base text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
             />
           </div>
 
           <div>
-            <label className="font-mono text-[9px] text-rvno-ink-dim uppercase tracking-wide block mb-1">
+            <label className="font-body text-sm text-rvno-ink-dim uppercase tracking-wide block mb-1">
               Date Taken
             </label>
             <input
               type="date"
               value={takenAt}
               onChange={(e) => setTakenAt(e.target.value)}
-              className="w-full bg-rvno-card border border-white/[0.06] rounded px-3 py-2 font-mono text-sm text-rvno-ink focus:outline-none focus:border-rvno-teal/40"
+              className="w-full bg-rvno-card border-2 border-rvno-border rounded-lg px-4 py-3 font-body text-base text-rvno-ink focus:outline-none focus:border-rvno-teal/40"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="font-mono text-[9px] text-rvno-ink-dim uppercase tracking-wide block mb-1">
+              <label className="font-body text-sm text-rvno-ink-dim uppercase tracking-wide block mb-1">
                 Latitude
               </label>
               <input
@@ -671,11 +671,11 @@ function PhotoEditModal({
                 value={lat}
                 onChange={(e) => setLat(e.target.value)}
                 placeholder="37.27"
-                className="w-full bg-rvno-card border border-white/[0.06] rounded px-3 py-2 font-mono text-sm text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
+                className="w-full bg-rvno-card border-2 border-rvno-border rounded-lg px-4 py-3 font-body text-base text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
               />
             </div>
             <div>
-              <label className="font-mono text-[9px] text-rvno-ink-dim uppercase tracking-wide block mb-1">
+              <label className="font-body text-sm text-rvno-ink-dim uppercase tracking-wide block mb-1">
                 Longitude
               </label>
               <input
@@ -683,23 +683,23 @@ function PhotoEditModal({
                 value={lng}
                 onChange={(e) => setLng(e.target.value)}
                 placeholder="-79.94"
-                className="w-full bg-rvno-card border border-white/[0.06] rounded px-3 py-2 font-mono text-sm text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
+                className="w-full bg-rvno-card border-2 border-rvno-border rounded-lg px-4 py-3 font-body text-base text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
               />
             </div>
           </div>
         </div>
 
-        <div className="flex items-center justify-between mt-5 pt-4 border-t border-white/[0.06]">
+        <div className="flex items-center justify-between mt-5 pt-4 border-t border-rvno-border">
           <button
             onClick={handleDelete}
-            className="font-mono text-[10px] text-rvno-dot hover:text-red-400 tracking-wide"
+            className="font-body text-sm text-rvno-dot hover:text-red-400 tracking-wide"
           >
             Delete Photo
           </button>
           <div className="flex gap-2">
             <button
               onClick={onClose}
-              className="font-mono text-[10px] text-rvno-ink-dim hover:text-rvno-ink tracking-wide px-3 py-1.5"
+              className="font-body text-sm text-rvno-ink-dim hover:text-rvno-ink tracking-wide px-3 py-1.5"
             >
               Cancel
             </button>
@@ -767,7 +767,7 @@ function NewMemberForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-rvno-card rounded-lg border border-white/[0.06] p-5 mb-6 space-y-3"
+      className="bg-rvno-card rounded-lg border border-rvno-border p-5 mb-6 space-y-3"
     >
       <div className="grid grid-cols-2 gap-3">
         <input
@@ -775,7 +775,7 @@ function NewMemberForm({
           placeholder="Full name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="bg-rvno-elevated border border-white/[0.06] rounded px-3 py-2 font-mono text-sm text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
+          className="bg-rvno-elevated border-2 border-rvno-border rounded-lg px-4 py-3 font-body text-base text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
           required
         />
         <input
@@ -783,7 +783,7 @@ function NewMemberForm({
           placeholder="Title (e.g., Founder, Parliamentarian)"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="bg-rvno-elevated border border-white/[0.06] rounded px-3 py-2 font-mono text-sm text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
+          className="bg-rvno-elevated border-2 border-rvno-border rounded-lg px-4 py-3 font-body text-base text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
         />
       </div>
 
@@ -799,7 +799,7 @@ function NewMemberForm({
                 ? type === "member"
                   ? "bg-rvno-teal-dark text-rvno-white border-rvno-teal"
                   : "bg-rvno-dot/80 text-rvno-white border-rvno-dot"
-                : "bg-transparent text-rvno-ink-dim border-white/[0.06] hover:text-rvno-ink-muted"
+                : "bg-transparent text-rvno-ink-dim border-rvno-border hover:text-rvno-ink-muted"
             }`}
           >
             {type === "member" ? "Member" : "Friend of RVNO"}
@@ -812,14 +812,14 @@ function NewMemberForm({
         placeholder="Bikes (e.g., 1973 Norton 750 Commando)"
         value={bikes}
         onChange={(e) => setBikes(e.target.value)}
-        className="w-full bg-rvno-elevated border border-white/[0.06] rounded px-3 py-2 font-mono text-sm text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
+        className="w-full bg-rvno-elevated border-2 border-rvno-border rounded-lg px-4 py-3 font-body text-base text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
       />
       <textarea
         placeholder="Short bio (optional)"
         value={bio}
         onChange={(e) => setBio(e.target.value)}
         rows={2}
-        className="w-full bg-rvno-elevated border border-white/[0.06] rounded px-3 py-2 font-mono text-sm text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40 resize-none"
+        className="w-full bg-rvno-elevated border-2 border-rvno-border rounded-lg px-4 py-3 font-body text-base text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40 resize-none"
       />
       <div className="grid grid-cols-3 gap-3">
         <input
@@ -827,21 +827,21 @@ function NewMemberForm({
           placeholder="City"
           value={city}
           onChange={(e) => setCity(e.target.value)}
-          className="bg-rvno-elevated border border-white/[0.06] rounded px-3 py-2 font-mono text-sm text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
+          className="bg-rvno-elevated border-2 border-rvno-border rounded-lg px-4 py-3 font-body text-base text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
         />
         <input
           type="text"
           placeholder="State"
           value={state}
           onChange={(e) => setState(e.target.value)}
-          className="bg-rvno-elevated border border-white/[0.06] rounded px-3 py-2 font-mono text-sm text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
+          className="bg-rvno-elevated border-2 border-rvno-border rounded-lg px-4 py-3 font-body text-base text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
         />
         <input
           type="text"
           placeholder="Country"
           value={country}
           onChange={(e) => setCountry(e.target.value)}
-          className="bg-rvno-elevated border border-white/[0.06] rounded px-3 py-2 font-mono text-sm text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
+          className="bg-rvno-elevated border-2 border-rvno-border rounded-lg px-4 py-3 font-body text-base text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
         />
       </div>
       <div className="grid grid-cols-2 gap-3">
@@ -850,20 +850,20 @@ function NewMemberForm({
           placeholder="Latitude (e.g., 37.27)"
           value={lat}
           onChange={(e) => setLat(e.target.value)}
-          className="bg-rvno-elevated border border-white/[0.06] rounded px-3 py-2 font-mono text-sm text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
+          className="bg-rvno-elevated border-2 border-rvno-border rounded-lg px-4 py-3 font-body text-base text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
         />
         <input
           type="text"
           placeholder="Longitude (e.g., -79.94)"
           value={lng}
           onChange={(e) => setLng(e.target.value)}
-          className="bg-rvno-elevated border border-white/[0.06] rounded px-3 py-2 font-mono text-sm text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
+          className="bg-rvno-elevated border-2 border-rvno-border rounded-lg px-4 py-3 font-body text-base text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
         />
       </div>
       <button
         type="submit"
         disabled={saving}
-        className="bg-rvno-teal-dark text-rvno-white font-mono text-sm px-4 py-2 rounded hover:bg-rvno-teal transition-colors disabled:opacity-50"
+        className="bg-rvno-teal text-white font-body text-base font-semibold px-6 py-3 rounded-lg min-h-[48px] hover:bg-rvno-teal transition-colors disabled:opacity-50"
       >
         {saving ? "Adding..." : "Add Member"}
       </button>
@@ -897,7 +897,7 @@ function MemberRow({
   }
 
   return (
-    <div className="bg-rvno-card rounded-lg border border-white/[0.06] p-4">
+    <div className="bg-rvno-card rounded-lg border border-rvno-border p-4">
       <div className="flex items-center justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-2">
@@ -914,11 +914,11 @@ function MemberRow({
               {member.member_type === "member" ? "MEMBER" : "FRIEND"}
             </span>
           </div>
-          <p className="font-mono text-[10px] text-rvno-teal tracking-wide mt-0.5">
+          <p className="font-body text-sm text-rvno-teal tracking-wide mt-0.5">
             {[member.title, member.location_name].filter(Boolean).join(" · ")}
           </p>
           {member.bikes && (
-            <p className="font-mono text-[10px] text-rvno-ink-dim mt-0.5">
+            <p className="font-body text-sm text-rvno-ink-dim mt-0.5">
               🏍️ {member.bikes}
             </p>
           )}
@@ -926,13 +926,13 @@ function MemberRow({
         <div className="flex items-center gap-2">
           <button
             onClick={() => setEditing(!editing)}
-            className="font-mono text-[9px] text-rvno-ink-dim hover:text-rvno-teal tracking-wide"
+            className="font-body text-sm text-rvno-ink-dim hover:text-rvno-teal tracking-wide"
           >
             Edit
           </button>
           <button
             onClick={deleteMember}
-            className="font-mono text-[9px] text-rvno-ink-dim hover:text-rvno-dot tracking-wide"
+            className="font-body text-sm text-rvno-ink-dim hover:text-rvno-dot tracking-wide"
           >
             Delete
           </button>
@@ -940,8 +940,8 @@ function MemberRow({
       </div>
 
       {editing && (
-        <div className="mt-3 pt-3 border-t border-white/[0.06]">
-          <label className="font-mono text-[9px] text-rvno-ink-dim uppercase tracking-wide block mb-2">
+        <div className="mt-3 pt-3 border-t border-rvno-border">
+          <label className="font-body text-sm text-rvno-ink-dim uppercase tracking-wide block mb-2">
             Member Type
           </label>
           <div className="flex gap-2">
@@ -954,7 +954,7 @@ function MemberRow({
                     ? type === "member"
                       ? "bg-rvno-teal-dark text-rvno-white border-rvno-teal"
                       : "bg-rvno-dot/80 text-rvno-white border-rvno-dot"
-                    : "bg-transparent text-rvno-ink-dim border-white/[0.06] hover:text-rvno-ink-muted"
+                    : "bg-transparent text-rvno-ink-dim border-rvno-border hover:text-rvno-ink-muted"
                 }`}
               >
                 {type === "member" ? "Member" : "Friend of RVNO"}

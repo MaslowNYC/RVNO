@@ -7,7 +7,7 @@ export default function ContactPage() {
         <h1 className="font-display text-3xl font-bold text-rvno-ink mb-2">
           Get in Touch
         </h1>
-        <p className="font-body text-sm text-rvno-ink-muted italic">
+        <p className="font-body text-base text-rvno-ink-muted italic">
           Want to join us? Got a Norton collecting dust? Know a good joke? Drop
           us a line.
         </p>
@@ -17,26 +17,26 @@ export default function ContactPage() {
         {/* Contact action */}
         <div className="space-y-5">
           <div>
-            <h3 className="font-mono text-[10px] text-rvno-teal tracking-wide uppercase mb-3">
+            <h3 className="font-mono text-sm text-rvno-teal tracking-wide uppercase mb-3 font-semibold">
               Reach Out
             </h3>
             <a
               href={mailtoLink}
-              className="inline-flex items-center gap-2 bg-rvno-teal-dark text-rvno-white font-mono text-sm px-5 py-2.5 rounded hover:bg-rvno-teal transition-colors"
+              className="inline-flex items-center gap-2 bg-rvno-teal text-white font-body text-base font-semibold px-6 py-3 rounded-lg hover:bg-rvno-teal-dark transition-colors min-h-[48px]"
             >
               <span>Email Mark</span>
-              <span className="text-xs opacity-70">→</span>
+              <span className="text-sm opacity-80">→</span>
             </a>
-            <p className="font-mono text-[9px] text-rvno-ink-dim mt-2">
+            <p className="font-body text-sm text-rvno-ink-dim mt-2">
               Opens your email app with subject pre-filled
             </p>
           </div>
 
           <div>
-            <h3 className="font-mono text-[10px] text-rvno-teal tracking-wide uppercase mb-1.5">
+            <h3 className="font-mono text-sm text-rvno-teal tracking-wide uppercase mb-2 font-semibold">
               Location
             </h3>
-            <p className="font-body text-sm text-rvno-ink-muted">
+            <p className="font-body text-base text-rvno-ink-muted">
               Roanoke Valley, Virginia
               <br />
               Blue Ridge Mountains
@@ -45,11 +45,11 @@ export default function ContactPage() {
         </div>
 
         {/* About joining */}
-        <div className="bg-rvno-card rounded-lg border border-white/[0.06] p-5">
-          <h3 className="font-display text-base font-semibold text-rvno-ink mb-3">
+        <div className="bg-rvno-card rounded-lg border-2 border-rvno-border p-5">
+          <h3 className="font-display text-lg font-semibold text-rvno-ink mb-3">
             About Joining
           </h3>
-          <div className="space-y-3 font-body text-sm text-rvno-ink-muted leading-relaxed">
+          <div className="space-y-3 font-body text-base text-rvno-ink-muted leading-relaxed">
             <p>
               RVNO is an informal group with no membership fees or complicated
               requirements. If you appreciate Norton motorcycles and enjoy good

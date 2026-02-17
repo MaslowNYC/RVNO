@@ -44,7 +44,7 @@ export default function EventsPage() {
         <h1 className="font-display text-3xl font-bold text-rvno-ink mb-2">
           Upcoming Events
         </h1>
-        <p className="font-body text-sm text-rvno-ink-muted italic">
+        <p className="font-body text-base text-rvno-ink-muted italic">
           Rides, meetups, and rallies — where Nortons and their people gather
         </p>
       </header>
@@ -53,53 +53,53 @@ export default function EventsPage() {
         {events.map((event, i) => (
           <div
             key={i}
-            className="bg-rvno-card rounded-lg border border-white/[0.06] p-5"
+            className="bg-rvno-card rounded-lg border-2 border-rvno-border p-5"
           >
             <div className="flex items-start justify-between gap-4 mb-3">
               <div>
-                <h3 className="font-display text-lg font-semibold text-rvno-ink">
+                <h3 className="font-display text-xl font-semibold text-rvno-ink">
                   {event.title}
                 </h3>
-                <p className="font-mono text-[10px] text-rvno-teal tracking-wide mt-1">
+                <p className="font-mono text-sm text-rvno-teal tracking-wide mt-1 font-medium">
                   {event.date} · {event.time}
                 </p>
               </div>
               <span
-                className={`font-mono text-[9px] px-2 py-1 rounded tracking-wide flex-shrink-0 ${
+                className={`font-body text-sm px-3 py-1.5 rounded-lg tracking-wide flex-shrink-0 font-semibold ${
                   event.open
-                    ? "bg-rvno-teal/10 text-rvno-teal"
-                    : "bg-rvno-surface text-rvno-ink-dim"
+                    ? "bg-rvno-teal text-white"
+                    : "bg-rvno-surface text-rvno-ink-muted border border-rvno-border"
                 }`}
               >
                 {event.open ? "Open to All" : "Club Members"}
               </span>
             </div>
-            <p className="font-mono text-[10px] text-rvno-ink-dim mb-2">
+            <p className="font-body text-base text-rvno-ink-dim mb-2">
               📍 {event.location}
             </p>
-            <p className="font-body text-sm text-rvno-ink-muted leading-relaxed">
+            <p className="font-body text-base text-rvno-ink-muted leading-relaxed">
               {event.description}
             </p>
           </div>
         ))}
       </div>
 
-      <section className="bg-rvno-elevated rounded-lg border border-white/[0.06] p-6">
-        <h2 className="font-display text-lg font-semibold text-rvno-ink mb-3">
+      <section className="bg-rvno-card rounded-lg border-2 border-rvno-border p-6">
+        <h2 className="font-display text-xl font-semibold text-rvno-ink mb-3">
           Want to Join Us?
         </h2>
-        <p className="font-body text-sm text-rvno-ink-muted leading-relaxed mb-3">
+        <p className="font-body text-base text-rvno-ink-muted leading-relaxed mb-3">
           Most of our events are open to anyone who appreciates Norton
           motorcycles. Whether you own one, used to own one, or just think
           they&apos;re fascinating, you&apos;re welcome to join us.
         </p>
-        <div className="space-y-2">
-          <p className="font-body text-sm text-rvno-ink-muted leading-relaxed">
+        <div className="space-y-3">
+          <p className="font-body text-base text-rvno-ink-muted leading-relaxed">
             <span className="text-rvno-ink font-semibold">Open Events:</span>{" "}
             Events marked &ldquo;Open to All&rdquo; welcome anyone interested in
             Norton motorcycles. No membership required — just show up and enjoy!
           </p>
-          <p className="font-body text-sm text-rvno-ink-muted leading-relaxed">
+          <p className="font-body text-base text-rvno-ink-muted leading-relaxed">
             <span className="text-rvno-ink font-semibold">
               Monthly Meetups:
             </span>{" "}

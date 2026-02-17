@@ -19,13 +19,13 @@ export default async function MembersPage() {
         <h1 className="font-display text-3xl font-bold text-rvno-ink mb-2">
           The Usual Suspects
         </h1>
-        <p className="font-body text-sm text-rvno-ink-muted italic">
+        <p className="font-body text-base text-rvno-ink-muted italic">
           The people behind the Nortons
         </p>
       </header>
 
       {members.length === 0 ? (
-        <p className="text-center font-mono text-sm text-rvno-ink-dim">
+        <p className="text-center font-body text-base text-rvno-ink-dim">
           Member profiles coming soon. We&apos;re still finding our good sides.
         </p>
       ) : (
@@ -33,7 +33,7 @@ export default async function MembersPage() {
           {members.map((member) => (
             <div
               key={member.id}
-              className="bg-rvno-card rounded-lg border border-white/[0.06] p-5 flex gap-4 items-start"
+              className="bg-rvno-card rounded-lg border-2 border-rvno-border p-5 flex gap-4 items-start"
             >
               {/* Photo or placeholder */}
               <div className="w-16 h-16 rounded-full bg-rvno-surface flex-shrink-0 flex items-center justify-center overflow-hidden">
@@ -47,28 +47,28 @@ export default async function MembersPage() {
                   <span className="font-display text-lg text-rvno-ink-dim">
                     {member.name
                       .split(" ")
-                      .map((n) => n[0])
+                      .map((n: string) => n[0])
                       .join("")}
                   </span>
                 )}
               </div>
 
               <div className="flex-1 min-w-0">
-                <h3 className="font-display text-base font-semibold text-rvno-ink">
+                <h3 className="font-display text-lg font-semibold text-rvno-ink">
                   {member.name}
                 </h3>
                 {member.title && (
-                  <p className="font-mono text-[10px] text-rvno-teal tracking-wide uppercase mt-0.5">
+                  <p className="font-mono text-sm text-rvno-teal tracking-wide uppercase mt-0.5 font-medium">
                     {member.title}
                   </p>
                 )}
                 {member.bio && (
-                  <p className="font-body text-xs text-rvno-ink-muted mt-2 leading-relaxed">
+                  <p className="font-body text-base text-rvno-ink-muted mt-2 leading-relaxed">
                     {member.bio}
                   </p>
                 )}
                 {member.bikes && (
-                  <p className="font-mono text-[10px] text-rvno-ink-dim mt-2">
+                  <p className="font-body text-sm text-rvno-ink-dim mt-2">
                     🏍️ {member.bikes}
                   </p>
                 )}

@@ -68,7 +68,7 @@ export default function ResourcesPage() {
         <h1 className="font-display text-3xl font-bold text-rvno-ink mb-2">
           Norton Stuff
         </h1>
-        <p className="font-body text-sm text-rvno-ink-muted italic">
+        <p className="font-body text-base text-rvno-ink-muted italic">
           Helpful resources we&apos;ve gathered over the years — parts,
           knowledge, and places to ride
         </p>
@@ -77,7 +77,7 @@ export default function ResourcesPage() {
       <div className="space-y-8">
         {SECTIONS.map((section) => (
           <section key={section.title}>
-            <h2 className="font-display text-lg font-semibold text-rvno-ink mb-3">
+            <h2 className="font-display text-xl font-semibold text-rvno-ink mb-3">
               {section.title}
             </h2>
             <div className="space-y-2">
@@ -87,13 +87,13 @@ export default function ResourcesPage() {
                   href={link.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block bg-rvno-card rounded-lg border border-white/[0.06] p-4 hover:border-rvno-teal/20 transition-colors no-underline group"
+                  className="block bg-rvno-card rounded-lg border-2 border-rvno-border p-4 hover:border-rvno-teal transition-colors no-underline group min-h-[44px]"
                 >
-                  <h3 className="font-display text-sm font-semibold text-rvno-ink group-hover:text-rvno-teal transition-colors">
+                  <h3 className="font-display text-base font-semibold text-rvno-ink group-hover:text-rvno-teal transition-colors">
                     {link.name}{" "}
-                    <span className="text-rvno-ink-dim text-xs">↗</span>
+                    <span className="text-rvno-teal text-sm">↗</span>
                   </h3>
-                  <p className="font-body text-xs text-rvno-ink-muted mt-1 leading-relaxed">
+                  <p className="font-body text-base text-rvno-ink-muted mt-1 leading-relaxed">
                     {link.desc}
                   </p>
                 </a>
@@ -103,18 +103,18 @@ export default function ResourcesPage() {
         ))}
       </div>
 
-      <section className="mt-10 bg-rvno-elevated rounded-lg border border-white/[0.06] p-5">
-        <h2 className="font-display text-base font-semibold text-rvno-ink mb-2">
+      <section className="mt-10 bg-rvno-card rounded-lg border-2 border-rvno-border p-6">
+        <h2 className="font-display text-lg font-semibold text-rvno-ink mb-2">
           Local Shops & Services
         </h2>
-        <p className="font-body text-sm text-rvno-ink-muted leading-relaxed mb-4">
+        <p className="font-body text-base text-rvno-ink-muted leading-relaxed mb-4">
           Contact us for recommendations on local shops familiar with vintage
           British motorcycles and Norton-specific work.
         </p>
-        <h2 className="font-display text-base font-semibold text-rvno-ink mb-2">
+        <h2 className="font-display text-lg font-semibold text-rvno-ink mb-2">
           Know a Great Resource?
         </h2>
-        <p className="font-body text-sm text-rvno-ink-muted leading-relaxed">
+        <p className="font-body text-base text-rvno-ink-muted leading-relaxed">
           We&apos;re always looking to add helpful links and resources. If you
           know of a great Norton-related website, parts supplier, or local
           service we should list, let us know!

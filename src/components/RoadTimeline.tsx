@@ -4,22 +4,22 @@ import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import type { Album } from "@/lib/database.types";
 import { supabase } from "@/lib/supabase";
 
-// Colors matching our Tailwind config
+// Colors matching our light theme Tailwind config
 const C = {
-  paper: "#2C2A26",
-  ink: "#E8E4DC",
-  inkMuted: "#9A958A",
+  paper: "#F5F0E8",
+  ink: "#1A1A1F",
+  inkMuted: "#4A4843",
   inkDim: "#6B6760",
-  teal: "#4AABB8",
-  tealDark: "#2D8A96",
-  tealMuted: "#3A7A84",
-  road: "#5C5040",
-  roadDark: "#4A3F32",
-  roadEdge: "#3A3228",
-  roadLine: "#8A7D65",
-  dot: "#D4582A",
-  dotHover: "#E8703E",
-  white: "#F0ECE4",
+  teal: "#1D7A86",
+  tealDark: "#155A63",
+  tealMuted: "#2A8B98",
+  road: "#8B7355",
+  roadDark: "#6B5A45",
+  roadEdge: "#5A4A38",
+  roadLine: "#D4C9B8",
+  dot: "#C44D22",
+  dotHover: "#A83D18",
+  white: "#FFFFFF",
 };
 
 type Point = { x: number; y: number };
@@ -500,7 +500,7 @@ export function RoadTimeline({ albums, isAdmin = false }: RoadTimelineProps) {
             animation: "fadeIn 0.15s ease-out",
           }}
         >
-          <div className="w-60 bg-rvno-elevated rounded-md overflow-hidden border border-white/[0.06] shadow-2xl">
+          <div className="w-60 bg-rvno-card rounded-md overflow-hidden border border-rvno-border shadow-xl">
             <div
               className="h-24 flex items-center justify-center relative"
               style={{
