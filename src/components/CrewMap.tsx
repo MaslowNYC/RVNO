@@ -35,13 +35,14 @@ export function CrewMap({ members }: { members: Member[] }) {
       maxZoom: 10,
     });
 
-    // Clean, minimal world map — light with country borders
-    L.tileLayer(
-      "https://tiles.stadiamaps.com/tiles/stamen_toner_lite/{z}/{x}/{y}{r}.png",
+    // OpenStreetMap tiles with vintage/muted CSS filter for that old Rand McNally feel
+    const tileLayer = L.tileLayer(
+      "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
       {
         attribution:
-          '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a> &copy; <a href="https://stamen.com/">Stamen Design</a>',
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 18,
+        className: "vintage-tiles",
       }
     ).addTo(map);
 
@@ -195,6 +196,9 @@ export function CrewMap({ members }: { members: Member[] }) {
         .rvno-crew-popup .leaflet-popup-content-wrapper {
           border-radius: 6px;
           box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .vintage-tiles {
+          filter: sepia(0.3) saturate(0.8) brightness(0.95);
         }
       `}</style>
       <div

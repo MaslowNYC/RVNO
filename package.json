@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@react-google-maps/api": "^2.20.8",
     "@supabase/supabase-js": "^2.49.1",
     "@types/leaflet": "^1.9.21",
     "exifr": "^7.1.3",
