@@ -3,14 +3,20 @@
 import { useState, useEffect } from "react";
 import { RoadTimeline } from "@/components/RoadTimeline";
 import { AlbumMap } from "@/components/AlbumMap";
+import { CrewMap } from "@/components/CrewMap";
 import { supabase } from "@/lib/supabase";
-import type { Album, Photo } from "@/lib/database.types";
+import type { Album, Photo, Member } from "@/lib/database.types";
 
 type AlbumWithCount = Album & { photo_count: number };
 
-export function HomeContent({ albums }: { albums: AlbumWithCount[] }) {
-  const [view, setView] = useState<"road" | "map">("road");
-  const [photos, setPhotos] = useState<Photo[]>([]);
+interface HomeContentProps {
+  albums: AlbumWithCount[];
+  photos: Photo[];
+  members: Member[];
+}
+
+export function HomeContent({ albums, photos, members }: HomeContentProps) {
+  const [view, setView] = useState<"road" | "map" | "crew">("crew");
   const [isAdmin, setIsAdmin] = useState(false);
 
   // Check if user is admin
@@ -22,19 +28,6 @@ export function HomeContent({ albums }: { albums: AlbumWithCount[] }) {
       setIsAdmin(!!session);
     });
     return () => subscription.unsubscribe();
-  }, []);
-
-  // Load photos with GPS for the map
-  useEffect(() => {
-    async function loadPhotos() {
-      const { data } = await supabase
-        .from("photos")
-        .select("*")
-        .not("location_lat", "is", null)
-        .not("location_lng", "is", null);
-      if (data) setPhotos(data);
-    }
-    loadPhotos();
   }, []);
 
   return (
@@ -51,6 +44,7 @@ export function HomeContent({ albums }: { albums: AlbumWithCount[] }) {
       {/* View toggle */}
       <div className="flex justify-center pb-2 gap-1">
         {[
+          { key: "crew" as const, label: "The Crew", icon: "👥" },
           { key: "road" as const, label: "The Road", icon: "⟿" },
           { key: "map" as const, label: "The Map", icon: "◎" },
         ].map((v) => (
@@ -70,11 +64,9 @@ export function HomeContent({ albums }: { albums: AlbumWithCount[] }) {
 
       {/* Content */}
       <div className="px-3">
-        {view === "road" ? (
-          <RoadTimeline albums={albums} isAdmin={isAdmin} />
-        ) : (
-          <AlbumMap albums={albums} photos={photos} />
-        )}
+        {view === "crew" && <CrewMap members={members} />}
+        {view === "road" && <RoadTimeline albums={albums} isAdmin={isAdmin} />}
+        {view === "map" && <AlbumMap albums={albums} photos={photos} />}
       </div>
     </div>
   );

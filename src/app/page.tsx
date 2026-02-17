@@ -27,7 +27,31 @@ async function getAlbums() {
   }));
 }
 
+async function getPhotosWithLocation() {
+  const { data: photos } = await supabase
+    .from("photos")
+    .select("*, location_lat, location_lng")
+    .not("location_lat", "is", null)
+    .not("location_lng", "is", null);
+
+  return photos || [];
+}
+
+async function getMembers() {
+  const { data: members } = await supabase
+    .from("members")
+    .select("*, member_type")
+    .order("name", { ascending: true });
+
+  return members || [];
+}
+
 export default async function Home() {
-  const albums = await getAlbums();
-  return <HomeContent albums={albums} />;
+  const [albums, photos, members] = await Promise.all([
+    getAlbums(),
+    getPhotosWithLocation(),
+    getMembers(),
+  ]);
+
+  return <HomeContent albums={albums} photos={photos} members={members} />;
 }
