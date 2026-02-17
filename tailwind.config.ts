@@ -30,7 +30,7 @@ const config: Config = {
       },
       fontFamily: {
         display: ["Playfair Display", "Georgia", "serif"],
-        body: ["Source Serif 4", "Georgia", "serif"],
+        body: ["Atkinson Hyperlegible", "system-ui", "sans-serif"],
         mono: ["IBM Plex Mono", "monospace"],
       },
     },

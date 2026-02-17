@@ -32,7 +32,7 @@ export function Header() {
             <Link
               key={item.href}
               href={item.href}
-              className={`font-mono text-[10px] tracking-wide no-underline transition-colors ${
+              className={`font-mono text-[12px] tracking-wide no-underline transition-colors ${
                 pathname === item.href
                   ? "text-rvno-teal"
                   : "text-rvno-ink-muted hover:text-rvno-teal"
