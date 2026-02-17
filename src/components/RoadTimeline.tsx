@@ -174,8 +174,8 @@ export function RoadTimeline({ albums, isAdmin = false }: RoadTimelineProps) {
       setOffsets((prev) => ({
         ...prev,
         [draggingId]: {
-          x: Math.max(-80, Math.min(80, dragStartRef.current!.offsetX + dx)),
-          y: Math.max(-40, Math.min(40, dragStartRef.current!.offsetY + dy)),
+          x: dragStartRef.current!.offsetX + dx,
+          y: dragStartRef.current!.offsetY + dy,
         },
       }));
     },
@@ -380,10 +380,6 @@ export function RoadTimeline({ albums, isAdmin = false }: RoadTimelineProps) {
                 strokeDasharray={isHovered || isDragging ? "none" : "2,2"}
               />
 
-              {(isHovered || isDragging) && (
-                <circle cx={dotX} cy={dotY} r="14" fill="rgba(212,88,42,0.25)" filter="url(#glow)" />
-              )}
-
               {/* Admin mode indicator ring */}
               {isAdmin && (
                 <circle
@@ -397,10 +393,9 @@ export function RoadTimeline({ albums, isAdmin = false }: RoadTimelineProps) {
               )}
 
               <circle
-                cx={dotX} cy={dotY} r={isHovered || isDragging ? 7 : 5}
-                fill={isDragging ? C.teal : (isHovered ? C.dotHover : C.dot)}
+                cx={dotX} cy={dotY} r="5"
+                fill={isDragging ? C.teal : C.dot}
                 stroke={C.paper} strokeWidth="2"
-                style={{ transition: isDragging ? "none" : "all 0.15s ease" }}
               />
               <circle cx={dotX} cy={dotY} r="1.5" fill={C.white} opacity="0.7" />
 
