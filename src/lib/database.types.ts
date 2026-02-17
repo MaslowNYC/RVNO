@@ -48,6 +48,15 @@ export type PhotoInsert = {
   sort_order?: number;
 };
 
+export type MemberInsert = {
+  name: string;
+  title?: string | null;
+  bio?: string | null;
+  bikes?: string | null;
+  photo_url?: string | null;
+  sort_order?: number;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -55,17 +64,39 @@ export type Database = {
         Row: Album;
         Insert: AlbumInsert;
         Update: Partial<AlbumInsert>;
+        Relationships: [];
       };
       photos: {
         Row: Photo;
         Insert: PhotoInsert;
         Update: Partial<PhotoInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "photos_album_id_fkey";
+            columns: ["album_id"];
+            referencedRelation: "albums";
+            referencedColumns: ["id"];
+          }
+        ];
       };
       members: {
         Row: Member;
-        Insert: Omit<Member, "id" | "created_at">;
-        Update: Partial<Omit<Member, "id" | "created_at">>;
+        Insert: MemberInsert;
+        Update: Partial<MemberInsert>;
+        Relationships: [];
       };
+    };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      [_ in never]: never;
+    };
+    Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
     };
   };
 };
