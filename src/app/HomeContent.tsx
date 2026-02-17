@@ -39,8 +39,17 @@ export function HomeContent({ albums }: { albums: AlbumWithCount[] }) {
 
   return (
     <div className="pb-10">
+      {/* Hero logo */}
+      <div className="flex justify-center pt-6 pb-4">
+        <img
+          src="/RVNO.png"
+          alt="Roanoke Valley Norton Owners"
+          className="w-1/2 max-w-md h-auto"
+        />
+      </div>
+
       {/* View toggle */}
-      <div className="flex justify-center pt-5 pb-2 gap-1">
+      <div className="flex justify-center pb-2 gap-1">
         {[
           { key: "road" as const, label: "The Road", icon: "⟿" },
           { key: "map" as const, label: "The Map", icon: "◎" },
