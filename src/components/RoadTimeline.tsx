@@ -171,15 +171,18 @@ export function RoadTimeline({ albums, isAdmin = false }: RoadTimelineProps) {
       const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
       const dx = clientX - dragStartRef.current.x;
       const dy = clientY - dragStartRef.current.y;
+      // Clamp to keep dots within SVG bounds (with padding)
+      const maxOffsetX = width * 0.4;
+      const maxOffsetY = roadHeight * 0.1;
       setOffsets((prev) => ({
         ...prev,
         [draggingId]: {
-          x: dragStartRef.current!.offsetX + dx,
-          y: dragStartRef.current!.offsetY + dy,
+          x: Math.max(-maxOffsetX, Math.min(maxOffsetX, dragStartRef.current!.offsetX + dx)),
+          y: Math.max(-maxOffsetY, Math.min(maxOffsetY, dragStartRef.current!.offsetY + dy)),
         },
       }));
     },
-    [draggingId]
+    [draggingId, width, roadHeight]
   );
 
   const handleDragEnd = useCallback(() => {
@@ -213,15 +216,17 @@ export function RoadTimeline({ albums, isAdmin = false }: RoadTimelineProps) {
 
   // Compute actual dot positions (base + offset) - recalculates on every drag
   const dotPositions = useMemo(() => {
+    const padding = 30;
     return basePositions.map((base, idx) => {
       const album = albums[idx];
       const offset = offsets[album?.id] || { x: 0, y: 0 };
+      // Clamp final position to stay within SVG bounds
       return {
-        x: base.x + offset.x,
-        y: base.y + offset.y,
+        x: Math.max(padding, Math.min(width - padding, base.x + offset.x)),
+        y: Math.max(padding, Math.min(roadHeight - padding, base.y + offset.y)),
       };
     });
-  }, [basePositions, albums, offsets]);
+  }, [basePositions, albums, offsets, width, roadHeight]);
 
   // Generate the road path through all dot positions - updates in real-time during drag
   const roadPath = useMemo(() => {
