@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import type { Album } from "@/lib/database.types";
 import { supabase } from "@/lib/supabase";
 
@@ -22,37 +22,78 @@ const C = {
   white: "#F0ECE4",
 };
 
-function generateRoadPath(width: number, height: number, numPoints: number) {
-  const points: { x: number; y: number }[] = [];
+type Point = { x: number; y: number };
+
+// Generate base positions for dots (before offsets are applied)
+function generateBasePositions(width: number, height: number, numPoints: number): Point[] {
+  const points: Point[] = [];
   const padding = 60;
-  const usableWidth = width - padding * 2;
   const usableHeight = height - padding * 2;
   const segmentHeight = usableHeight / (numPoints + 1);
 
-  for (let i = 0; i <= numPoints + 1; i++) {
-    const y = padding + i * segmentHeight;
-    const progress = i / (numPoints + 1);
-    const amplitude = usableWidth * 0.3;
+  for (let i = 0; i < numPoints; i++) {
+    const y = padding + (i + 1) * segmentHeight;
+    const progress = (i + 1) / (numPoints + 1);
+    const amplitude = (width - padding * 2) * 0.3;
     const centerX = width / 2;
+    // Create a nice wave pattern as the default
     const wave = Math.sin(progress * Math.PI * 2.8 + 0.5) * amplitude;
     const wobble = Math.sin(progress * 7.3) * 18 + Math.cos(progress * 11.1) * 12;
     points.push({ x: centerX + wave + wobble, y });
   }
 
-  let d = `M ${points[0].x} ${points[0].y - 30}`;
-  for (let i = 0; i < points.length - 1; i++) {
-    const curr = points[i];
-    const next = points[i + 1];
-    const midY = (curr.y + next.y) / 2;
-    // Use seeded-ish values instead of random so the road is stable
-    const cp1x = curr.x + Math.sin(i * 3.7) * 20;
-    const cp2x = next.x + Math.cos(i * 5.3) * 20;
-    d += ` C ${cp1x} ${midY - segmentHeight * 0.2}, ${cp2x} ${midY + segmentHeight * 0.2}, ${next.x} ${next.y}`;
-  }
-  const last = points[points.length - 1];
-  d += ` C ${last.x + 25} ${last.y + 30}, ${last.x + 50} ${last.y + 55}, ${last.x + 40} ${last.y + 90}`;
+  return points;
+}
 
-  return { d, points: points.slice(1, points.length - 1) };
+// Catmull-Rom to Cubic Bezier conversion
+// Given 4 points (p0, p1, p2, p3), compute the bezier control points for the segment p1->p2
+function catmullRomToBezier(
+  p0: Point,
+  p1: Point,
+  p2: Point,
+  p3: Point,
+  tension: number = 0.5
+): { cp1: Point; cp2: Point } {
+  const t = tension;
+  return {
+    cp1: {
+      x: p1.x + (p2.x - p0.x) / (6 * t),
+      y: p1.y + (p2.y - p0.y) / (6 * t),
+    },
+    cp2: {
+      x: p2.x - (p3.x - p1.x) / (6 * t),
+      y: p2.y - (p3.y - p1.y) / (6 * t),
+    },
+  };
+}
+
+// Generate a smooth SVG path through all points using Catmull-Rom splines
+function generateSmoothPath(points: Point[], tension: number = 0.4): string {
+  if (points.length < 2) return "";
+
+  // Add virtual points at start and end for smooth curves
+  const extended = [
+    { x: points[0].x, y: points[0].y - 60 }, // Virtual start point above first
+    ...points,
+    { x: points[points.length - 1].x + 30, y: points[points.length - 1].y + 80 }, // Virtual end point below last
+  ];
+
+  // Start path at the virtual start point (above first dot)
+  let d = `M ${extended[0].x} ${extended[0].y - 30}`;
+
+  // Generate bezier curves for each segment
+  for (let i = 0; i < extended.length - 1; i++) {
+    const p0 = extended[Math.max(0, i - 1)];
+    const p1 = extended[i];
+    const p2 = extended[i + 1];
+    const p3 = extended[Math.min(extended.length - 1, i + 2)];
+
+    const { cp1, cp2 } = catmullRomToBezier(p0, p1, p2, p3, tension);
+
+    d += ` C ${cp1.x.toFixed(1)} ${cp1.y.toFixed(1)}, ${cp2.x.toFixed(1)} ${cp2.y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+  }
+
+  return d;
 }
 
 type TimelineAlbum = Album & { photo_count?: number };
@@ -71,7 +112,6 @@ export function RoadTimeline({ albums, isAdmin = false }: RoadTimelineProps) {
   const [hoverPos, setHoverPos] = useState({ x: 0, y: 0 });
   const [hoverSide, setHoverSide] = useState<"left" | "right">("right");
   const [width, setWidth] = useState(700);
-  const [roadData, setRoadData] = useState<ReturnType<typeof generateRoadPath> | null>(null);
 
   // Admin drag state
   const [offsets, setOffsets] = useState<OffsetMap>({});
@@ -134,8 +174,8 @@ export function RoadTimeline({ albums, isAdmin = false }: RoadTimelineProps) {
       setOffsets((prev) => ({
         ...prev,
         [draggingId]: {
-          x: Math.max(-40, Math.min(40, dragStartRef.current!.offsetX + dx)),
-          y: Math.max(-30, Math.min(30, dragStartRef.current!.offsetY + dy)),
+          x: Math.max(-80, Math.min(80, dragStartRef.current!.offsetX + dx)),
+          y: Math.max(-40, Math.min(40, dragStartRef.current!.offsetY + dy)),
         },
       }));
     },
@@ -165,9 +205,29 @@ export function RoadTimeline({ albums, isAdmin = false }: RoadTimelineProps) {
     };
   }, [draggingId, handleDragMove, handleDragEnd]);
 
-  useEffect(() => {
-    if (width > 0) setRoadData(generateRoadPath(width, roadHeight, albumCount));
+  // Compute base positions (without offsets)
+  const basePositions = useMemo(() => {
+    if (width <= 0 || albumCount === 0) return [];
+    return generateBasePositions(width, roadHeight, albumCount);
   }, [width, roadHeight, albumCount]);
+
+  // Compute actual dot positions (base + offset) - recalculates on every drag
+  const dotPositions = useMemo(() => {
+    return basePositions.map((base, idx) => {
+      const album = albums[idx];
+      const offset = offsets[album?.id] || { x: 0, y: 0 };
+      return {
+        x: base.x + offset.x,
+        y: base.y + offset.y,
+      };
+    });
+  }, [basePositions, albums, offsets]);
+
+  // Generate the road path through all dot positions - updates in real-time during drag
+  const roadPath = useMemo(() => {
+    if (dotPositions.length === 0) return "";
+    return generateSmoothPath(dotPositions, 0.4);
+  }, [dotPositions]);
 
   const handleDotHover = useCallback(
     (album: TimelineAlbum, point: { x: number; y: number }) => {
@@ -178,7 +238,7 @@ export function RoadTimeline({ albums, isAdmin = false }: RoadTimelineProps) {
     [width]
   );
 
-  if (!roadData || albums.length === 0) {
+  if (albums.length === 0) {
     return (
       <div className="text-center py-20">
         <p className="font-mono text-sm text-rvno-ink-dim">
@@ -192,6 +252,10 @@ export function RoadTimeline({ albums, isAdmin = false }: RoadTimelineProps) {
     const d = new Date(dateStr + "T00:00:00");
     return d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
   };
+
+  // Get first and last dot positions for labels
+  const firstDot = dotPositions[0];
+  const lastDot = dotPositions[dotPositions.length - 1];
 
   return (
     <div ref={containerRef} className="relative w-full max-w-[760px] mx-auto">
@@ -265,20 +329,24 @@ export function RoadTimeline({ albums, isAdmin = false }: RoadTimelineProps) {
           </text>
         </g>
 
-        {/* Road layers */}
-        <path d={roadData.d} fill="none" stroke="rgba(0,0,0,0.2)" strokeWidth="24" strokeLinecap="round" strokeLinejoin="round" />
-        <path d={roadData.d} fill="none" stroke={C.roadEdge} strokeWidth="20" strokeLinecap="round" strokeLinejoin="round" />
-        <path d={roadData.d} fill="none" stroke="url(#roadFade)" strokeWidth="18" strokeLinecap="round" strokeLinejoin="round" />
-        <path d={roadData.d} fill="none" stroke={C.roadLine} strokeWidth="1.5" strokeLinecap="round" strokeDasharray="10,8" opacity="0.45" />
+        {/* Road layers - path now passes through dot positions */}
+        {roadPath && (
+          <>
+            <path d={roadPath} fill="none" stroke="rgba(0,0,0,0.2)" strokeWidth="24" strokeLinecap="round" strokeLinejoin="round" />
+            <path d={roadPath} fill="none" stroke={C.roadEdge} strokeWidth="20" strokeLinecap="round" strokeLinejoin="round" />
+            <path d={roadPath} fill="none" stroke="url(#roadFade)" strokeWidth="18" strokeLinecap="round" strokeLinejoin="round" />
+            <path d={roadPath} fill="none" stroke={C.roadLine} strokeWidth="1.5" strokeLinecap="round" strokeDasharray="10,8" opacity="0.45" />
+          </>
+        )}
 
         {/* Event dots */}
-        {roadData.points.slice(0, albumCount).map((point, idx) => {
+        {dotPositions.map((pos, idx) => {
           const album = albums[idx];
+          if (!album) return null;
           const isHovered = hoveredAlbum?.id === album.id;
           const isDragging = draggingId === album.id;
-          const offset = offsets[album.id] || { x: 0, y: 0 };
-          const dotX = point.x + offset.x;
-          const dotY = point.y + offset.y;
+          const dotX = pos.x;
+          const dotY = pos.y;
           const labelSide = dotX > width / 2 ? "left" : "right";
           const labelX = labelSide === "right" ? dotX + 18 : dotX - 18;
 
@@ -287,12 +355,13 @@ export function RoadTimeline({ albums, isAdmin = false }: RoadTimelineProps) {
               key={album.id}
               onMouseEnter={() => !isDragging && handleDotHover(album, { x: dotX, y: dotY })}
               onMouseLeave={() => !isDragging && setHoveredAlbum(null)}
-              onClick={(e) => {
+              onClick={() => {
                 if (isAdmin && !isDragging) {
                   // Admin click without drag: still navigate
+                  const offset = offsets[album.id] || { x: 0, y: 0 };
                   const moved = dragStartRef.current
-                    ? Math.abs(offset.x - (dragStartRef.current.offsetX)) > 3 ||
-                      Math.abs(offset.y - (dragStartRef.current.offsetY)) > 3
+                    ? Math.abs(offset.x - dragStartRef.current.offsetX) > 3 ||
+                      Math.abs(offset.y - dragStartRef.current.offsetY) > 3
                     : false;
                   if (!moved) window.location.href = `/album/${album.id}`;
                 } else if (!isAdmin) {
@@ -366,24 +435,28 @@ export function RoadTimeline({ albums, isAdmin = false }: RoadTimelineProps) {
         })}
 
         {/* Start label */}
-        <g transform={`translate(${roadData.points[0]?.x - 40}, ${roadData.points[0]?.y - 38})`}>
-          <text fontSize="6" fontFamily="'IBM Plex Mono', monospace" fill={C.inkDim} letterSpacing="2" opacity="0.4" transform="rotate(-10)">
-            WHERE IT BEGAN
-          </text>
-        </g>
+        {firstDot && (
+          <g transform={`translate(${firstDot.x - 40}, ${firstDot.y - 38})`}>
+            <text fontSize="6" fontFamily="'IBM Plex Mono', monospace" fill={C.inkDim} letterSpacing="2" opacity="0.4" transform="rotate(-10)">
+              WHERE IT BEGAN
+            </text>
+          </g>
+        )}
 
         {/* End — no finish line */}
-        <text
-          x={(roadData.points[albumCount - 1]?.x || 400) + 30}
-          y={roadHeight + 5}
-          fontSize="6"
-          fontFamily="'IBM Plex Mono', monospace"
-          fill={C.inkDim}
-          letterSpacing="2"
-          opacity="0.25"
-        >
-          MORE ROAD AHEAD →
-        </text>
+        {lastDot && (
+          <text
+            x={lastDot.x + 30}
+            y={roadHeight + 5}
+            fontSize="6"
+            fontFamily="'IBM Plex Mono', monospace"
+            fill={C.inkDim}
+            letterSpacing="2"
+            opacity="0.25"
+          >
+            MORE ROAD AHEAD →
+          </text>
+        )}
       </svg>
 
       {/* Hover popup */}
