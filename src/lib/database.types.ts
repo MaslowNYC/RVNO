@@ -28,6 +28,12 @@ export type Member = {
   bikes: string | null;
   photo_url: string | null;
   sort_order: number;
+  location_name: string | null;
+  location_lat: number | null;
+  location_lng: number | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
   created_at: string;
 };
 
@@ -55,6 +61,12 @@ export type MemberInsert = {
   bikes?: string | null;
   photo_url?: string | null;
   sort_order?: number;
+  location_name?: string | null;
+  location_lat?: number | null;
+  location_lng?: number | null;
+  city?: string | null;
+  state?: string | null;
+  country?: string | null;
 };
 
 export type Database = {
