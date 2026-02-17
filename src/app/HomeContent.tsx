@@ -19,7 +19,6 @@ export function HomeContent({ albums, photos, members }: HomeContentProps) {
   const [view, setView] = useState<"road" | "map" | "crew">("crew");
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Check if user is admin
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setIsAdmin(!!session);
@@ -33,7 +32,7 @@ export function HomeContent({ albums, photos, members }: HomeContentProps) {
   return (
     <div className="pb-10">
       {/* Hero logo */}
-      <div className="flex justify-center pt-6 pb-4">
+      <div className="flex justify-center pt-8 pb-6">
         <img
           src="/RVNO.png"
           alt="Roanoke Valley Norton Owners"
@@ -41,8 +40,8 @@ export function HomeContent({ albums, photos, members }: HomeContentProps) {
         />
       </div>
 
-      {/* View toggle - large, obvious buttons */}
-      <div className="flex justify-center pb-4 gap-2">
+      {/* View toggle - metal file cabinet tabs */}
+      <div className="flex justify-center pb-6 gap-1">
         {[
           { key: "crew" as const, label: "The Crew" },
           { key: "road" as const, label: "The Road" },
@@ -51,22 +50,27 @@ export function HomeContent({ albums, photos, members }: HomeContentProps) {
           <button
             key={v.key}
             onClick={() => setView(v.key)}
-            className={`px-6 py-3 rounded-lg font-body text-base font-semibold tracking-wide transition-all min-h-[48px] ${
+            className={`px-6 py-3 font-mono text-sm uppercase tracking-widest transition-all min-h-[48px] border-t border-x ${
               view === v.key
-                ? "bg-rvno-teal text-white shadow-md"
-                : "bg-rvno-card text-rvno-ink-muted border-2 border-rvno-border hover:border-rvno-teal hover:text-rvno-ink"
+                ? "bg-rvno-card text-rvno-ink border-rvno-border -mb-px relative z-10"
+                : "bg-rvno-bg text-rvno-ink-dim border-transparent hover:text-rvno-ink-muted"
             }`}
+            style={{
+              borderRadius: "2px 2px 0 0",
+            }}
           >
             {v.label}
           </button>
         ))}
       </div>
 
-      {/* Content */}
+      {/* Content area with subtle top border */}
       <div className="px-3">
-        {view === "crew" && <CrewMap members={members} />}
-        {view === "road" && <RoadTimeline albums={albums} isAdmin={isAdmin} />}
-        {view === "map" && <AlbumMap albums={albums} photos={photos} />}
+        <div className="border-t border-rvno-border -mt-px pt-6">
+          {view === "crew" && <CrewMap members={members} />}
+          {view === "road" && <RoadTimeline albums={albums} isAdmin={isAdmin} />}
+          {view === "map" && <AlbumMap albums={albums} photos={photos} />}
+        </div>
       </div>
     </div>
   );

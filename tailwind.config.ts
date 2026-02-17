@@ -6,41 +6,44 @@ const config: Config = {
     extend: {
       colors: {
         rvno: {
-          // Light theme - warm cream/parchment background
-          bg: "#F5F0E8",
-          card: "#FFFDF8",
-          elevated: "#FFFFFF",
-          surface: "#EDE8E0",
+          // Dark workshop theme - warm charcoal like a well-worn bench
+          bg: "#1C1C1E",
+          card: "#2A2A2E",
+          elevated: "#323236",
+          surface: "#3A3A3E",
 
-          // Teal accents - darkened for WCAG AA contrast on light bg
-          teal: "#1D7A86",
-          "teal-dark": "#155A63",
-          "teal-muted": "#2A8B98",
+          // Teal accent - used sparingly like a pinstripe
+          teal: "#4AABB8",
+          "teal-dark": "#3A9BA8",
+          "teal-muted": "#3A8A96",
 
-          // Paper/road colors for RoadTimeline
-          paper: "#F5F0E8",
-          "paper-light": "#FAF7F2",
+          // Copper/brass accent - like old motorcycle hardware
+          copper: "#C4853A",
+          "copper-dark": "#A66E2C",
 
-          // Text colors - dark on light
-          ink: "#1A1A1F",
-          "ink-muted": "#4A4843",
+          // Paper color for RoadTimeline background
+          paper: "#2A2A2E",
+
+          // Text - warm off-white like old paper
+          ink: "#E8E4DC",
+          "ink-muted": "#A8A49C",
           "ink-dim": "#6B6760",
 
-          // Road visualization colors
-          road: "#8B7355",
-          "road-dark": "#6B5A45",
-          "road-edge": "#5A4A38",
-          "road-line": "#D4C9B8",
+          // Road visualization
+          road: "#4A4A4E",
+          "road-dark": "#3A3A3E",
+          "road-edge": "#2A2A2E",
+          "road-line": "#6B6760",
 
-          // Accent colors
-          dot: "#C44D22",
-          "dot-hover": "#A83D18",
+          // Dots/markers in copper - like brass rivets
+          dot: "#C4853A",
+          "dot-hover": "#D4954A",
 
-          // White (for dark backgrounds like buttons)
+          // White for button text
           white: "#FFFFFF",
 
-          // Border color for light theme
-          border: "rgba(0,0,0,0.12)",
+          // Subtle border
+          border: "rgba(255,255,255,0.08)",
         },
       },
       fontFamily: {
@@ -49,14 +52,13 @@ const config: Config = {
         mono: ["IBM Plex Mono", "monospace"],
       },
       fontSize: {
-        // Enforce minimum sizes
-        xs: ["0.875rem", { lineHeight: "1.5" }],  // 14px min
-        sm: ["1rem", { lineHeight: "1.6" }],       // 16px
-        base: ["1.125rem", { lineHeight: "1.6" }], // 18px
-        lg: ["1.25rem", { lineHeight: "1.5" }],
-        xl: ["1.5rem", { lineHeight: "1.4" }],
-        "2xl": ["1.875rem", { lineHeight: "1.3" }],
-        "3xl": ["2.25rem", { lineHeight: "1.2" }],
+        xs: ["0.875rem", { lineHeight: "1.5" }],   // 14px
+        sm: ["0.9375rem", { lineHeight: "1.6" }],  // 15px
+        base: ["1rem", { lineHeight: "1.7" }],     // 16px
+        lg: ["1.125rem", { lineHeight: "1.6" }],   // 18px
+        xl: ["1.25rem", { lineHeight: "1.5" }],    // 20px
+        "2xl": ["1.5rem", { lineHeight: "1.4" }],  // 24px
+        "3xl": ["2rem", { lineHeight: "1.3" }],    // 32px
       },
     },
   },

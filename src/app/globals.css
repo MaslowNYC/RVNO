@@ -2,69 +2,76 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
 * {
   box-sizing: border-box;
 }
 
 html {
-  font-size: 112.5%; /* 18px base for better readability */
+  font-size: 100%; /* 16px base */
 }
 
 body {
-  background: #F5F0E8;
-  color: #1A1A1F;
+  background: #1C1C1E;
+  color: #E8E4DC;
   font-family: 'Atkinson Hyperlegible', system-ui, sans-serif;
-  line-height: 1.6;
+  line-height: 1.7;
 }
 
 ::selection {
-  background: rgba(29, 122, 134, 0.25);
-  color: #1A1A1F;
+  background: rgba(74, 171, 184, 0.35);
+  color: #E8E4DC;
 }
 
-/* Scrollbar styling */
+/* Scrollbar - subtle, industrial */
 ::-webkit-scrollbar {
   width: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #EDE8E0;
+  background: #1C1C1E;
 }
 ::-webkit-scrollbar-thumb {
-  background: #C4BDB2;
-  border-radius: 4px;
+  background: #3A3A3E;
+  border-radius: 2px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #1D7A86;
+  background: #4AABB8;
 }
 
-/* Ensure minimum touch targets */
+/* Links - teal pinstripe accent */
+a {
+  color: #4AABB8;
+  text-decoration: none;
+}
+a:hover {
+  color: #6BCBD8;
+  text-decoration: underline;
+}
+
+/* Ensure touch targets */
 button, a, input, select, textarea {
   min-height: 44px;
 }
 
-/* Links should be obvious */
-a {
-  color: #1D7A86;
-}
-a:hover {
-  color: #155A63;
-  text-decoration: underline;
-}
-
-/* Form inputs - chunky and visible */
+/* Form inputs */
 input, select, textarea {
   font-size: 1rem;
-  padding: 0.75rem 1rem;
+  background: #2A2A2E;
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #E8E4DC;
+}
+
+input::placeholder, textarea::placeholder {
+  color: #6B6760;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: #4AABB8;
 }
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
 }

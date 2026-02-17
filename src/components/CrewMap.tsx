@@ -46,20 +46,20 @@ export function CrewMap({ members }: { members: Member[] }) {
       }
     ).addTo(map);
 
-    // Custom member marker - teal for members, copper/orange for friends
+    // Custom member marker - teal for members, copper for friends (brass rivets)
     const createMemberIcon = (initials: string, isFriend: boolean) =>
       L!.divIcon({
         className: "rvno-crew-marker",
         html: `<div style="
           width: 28px; height: 28px;
-          background: ${isFriend ? "#D4582A" : "#1D7A86"};
-          border: 2px solid #1A1A1F;
+          background: ${isFriend ? "#C4853A" : "#4AABB8"};
+          border: 2px solid #1C1C1E;
           border-radius: 50%;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+          box-shadow: 0 2px 8px rgba(0,0,0,0.5);
           display: flex; align-items: center; justify-content: center;
           font-family: 'IBM Plex Mono', monospace;
           font-size: 9px; font-weight: 600;
-          color: #F0ECE4;
+          color: #E8E4DC;
           letter-spacing: 0.5px;
         ">${initials}</div>`,
         iconSize: [28, 28],
@@ -90,49 +90,52 @@ export function CrewMap({ members }: { members: Member[] }) {
 
       const popupContent = `
         <div style="
-          font-family: 'Source Serif 4', Georgia, serif;
+          font-family: 'Atkinson Hyperlegible', system-ui, sans-serif;
           min-width: 160px; max-width: 200px;
+          background: #2A2A2E;
+          padding: 10px;
+          border-radius: 6px;
         ">
           ${
             member.photo_url
               ? `<img src="${member.photo_url}" style="
                   width: 50px; height: 50px; object-fit: cover;
                   border-radius: 50%; float: left; margin-right: 10px;
-                  border: 2px solid ${isFriend ? "#D4582A" : "#1D7A86"};
+                  border: 2px solid ${isFriend ? "#C4853A" : "#4AABB8"};
                 " />`
               : ""
           }
-          <div style="font-family: 'Playfair Display', Georgia, serif; font-size: 14px; font-weight: 600; color: #1A1A1F;">
+          <div style="font-family: 'Playfair Display', Georgia, serif; font-size: 14px; font-weight: 600; color: #E8E4DC;">
             ${member.name}
           </div>
           ${
             member.title
-              ? `<div style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: ${isFriend ? "#D4582A" : "#1D7A86"}; text-transform: uppercase; letter-spacing: 1px; margin-top: 1px;">
+              ? `<div style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: ${isFriend ? "#C4853A" : "#4AABB8"}; text-transform: uppercase; letter-spacing: 1px; margin-top: 1px;">
                   ${member.title}
                 </div>`
               : ""
           }
-          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 8px; color: ${isFriend ? "#D4582A" : "#1D7A86"}; margin-top: 2px;">
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 8px; color: ${isFriend ? "#C4853A" : "#4AABB8"}; margin-top: 2px;">
             ${isFriend ? "FRIEND OF RVNO" : "MEMBER"}
           </div>
           <div style="clear: both;"></div>
           ${
             locationParts
-              ? `<div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #6B6760; margin-top: 6px;">
+              ? `<div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A8A49C; margin-top: 6px;">
                   📍 ${locationParts}
                 </div>`
               : ""
           }
           ${
             member.bikes
-              ? `<div style="font-size: 11px; color: #6B6760; margin-top: 4px;">
+              ? `<div style="font-size: 11px; color: #A8A49C; margin-top: 4px;">
                   🏍️ ${member.bikes}
                 </div>`
               : ""
           }
           ${
             member.bio
-              ? `<div style="font-size: 11px; color: #4A4843; margin-top: 6px; line-height: 1.4;">
+              ? `<div style="font-size: 11px; color: #A8A49C; margin-top: 6px; line-height: 1.4;">
                   ${member.bio}
                 </div>`
               : ""
@@ -172,15 +175,12 @@ export function CrewMap({ members }: { members: Member[] }) {
   if (mappableMembers.length === 0) {
     return (
       <div className="max-w-[760px] mx-auto bg-rvno-card rounded-md border border-rvno-border p-9 text-center min-h-[360px] flex flex-col items-center justify-center gap-3.5">
-        <div className="w-11 h-11 rounded-full bg-gradient-to-br from-rvno-teal to-rvno-teal-dark flex items-center justify-center text-lg">
-          👥
-        </div>
-        <h2 className="font-display text-base text-rvno-ink">
-          Members Map Coming Soon
+        <h2 className="font-display text-lg text-rvno-ink">
+          Location Unknown
         </h2>
-        <p className="font-body text-xs text-rvno-ink-muted max-w-xs leading-relaxed">
-          Once member locations are added, you&apos;ll see everyone pinned across
-          the globe.
+        <p className="font-mono text-sm text-rvno-ink-muted max-w-xs leading-relaxed">
+          No member locations yet. We know they exist — we see them at meetups.
+          They just haven&apos;t told us where they live.
         </p>
       </div>
     );
@@ -194,11 +194,33 @@ export function CrewMap({ members }: { members: Member[] }) {
       />
       <style>{`
         .rvno-crew-popup .leaflet-popup-content-wrapper {
+          background: #2A2A2E;
           border-radius: 6px;
-          box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+          box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        .rvno-crew-popup .leaflet-popup-tip {
+          background: #2A2A2E;
+        }
+        .rvno-crew-popup .leaflet-popup-content {
+          margin: 0;
         }
         .vintage-tiles {
-          filter: sepia(0.3) saturate(0.8) brightness(0.95);
+          filter: brightness(0.7) saturate(0.6) contrast(1.1);
+        }
+        .leaflet-control-zoom a {
+          background: #2A2A2E !important;
+          color: #E8E4DC !important;
+          border-color: #3A3A3E !important;
+        }
+        .leaflet-control-zoom a:hover {
+          background: #3A3A3E !important;
+        }
+        .leaflet-control-attribution {
+          background: rgba(28, 28, 30, 0.8) !important;
+          color: #6B6760 !important;
+        }
+        .leaflet-control-attribution a {
+          color: #4AABB8 !important;
         }
       `}</style>
       <div

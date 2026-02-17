@@ -91,15 +91,12 @@ export function AlbumMap({
   if (mappablePhotos.length === 0) {
     return (
       <div className="max-w-[760px] mx-auto bg-rvno-card rounded-md border border-rvno-border p-9 text-center min-h-[360px] flex flex-col items-center justify-center gap-3.5">
-        <div className="w-11 h-11 rounded-full bg-gradient-to-br from-rvno-teal to-rvno-teal-dark flex items-center justify-center text-lg">
-          🗺️
-        </div>
-        <h2 className="font-display text-base text-rvno-ink">
-          No Mapped Photos Yet
+        <h2 className="font-display text-lg text-rvno-ink">
+          The Map Awaits
         </h2>
-        <p className="font-body text-xs text-rvno-ink-muted max-w-xs leading-relaxed">
-          Photos with GPS coordinates will appear here as pins on the map.
-          Upload photos with location data to see them mapped.
+        <p className="font-mono text-sm text-rvno-ink-muted max-w-xs leading-relaxed">
+          No photos with coordinates yet. Apparently we&apos;ve been too busy
+          riding to remember where we&apos;ve been.
         </p>
       </div>
     );
@@ -131,12 +128,22 @@ export function AlbumMap({
           onLoad={onLoad}
           options={{
             styles: [
-              // Vintage/muted map style
-              { featureType: "all", elementType: "all", stylers: [{ saturation: -40 }] },
-              { featureType: "water", elementType: "geometry", stylers: [{ color: "#c9d9d9" }] },
-              { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#e8e4dc" }] },
-              { featureType: "road", elementType: "geometry", stylers: [{ color: "#d4d0c8" }] },
-              { featureType: "poi", elementType: "geometry", stylers: [{ color: "#dcd8d0" }] },
+              // Dark workshop map style
+              { elementType: "geometry", stylers: [{ color: "#2A2A2E" }] },
+              { elementType: "labels.text.stroke", stylers: [{ color: "#1C1C1E" }] },
+              { elementType: "labels.text.fill", stylers: [{ color: "#6B6760" }] },
+              { featureType: "administrative", elementType: "geometry.stroke", stylers: [{ color: "#3A3A3E" }] },
+              { featureType: "administrative.land_parcel", elementType: "labels.text.fill", stylers: [{ color: "#6B6760" }] },
+              { featureType: "poi", elementType: "geometry", stylers: [{ color: "#323236" }] },
+              { featureType: "poi", elementType: "labels.text.fill", stylers: [{ color: "#6B6760" }] },
+              { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#2A3A2E" }] },
+              { featureType: "road", elementType: "geometry", stylers: [{ color: "#3A3A3E" }] },
+              { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#2A2A2E" }] },
+              { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#4A4A4E" }] },
+              { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ color: "#3A3A3E" }] },
+              { featureType: "transit", elementType: "geometry", stylers: [{ color: "#323236" }] },
+              { featureType: "water", elementType: "geometry", stylers: [{ color: "#1C2428" }] },
+              { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#4AABB8" }] },
             ],
           }}
         >
@@ -148,9 +155,9 @@ export function AlbumMap({
               icon={{
                 path: google.maps.SymbolPath.CIRCLE,
                 scale: 8,
-                fillColor: "#D4582A",
+                fillColor: "#C4853A",
                 fillOpacity: 1,
-                strokeColor: "#1A1A1F",
+                strokeColor: "#2A2A2E",
                 strokeWeight: 2,
               }}
             />
@@ -166,9 +173,12 @@ export function AlbumMap({
             >
               <div
                 style={{
-                  fontFamily: "'Source Serif 4', Georgia, serif",
+                  fontFamily: "'Atkinson Hyperlegible', system-ui, sans-serif",
                   minWidth: "160px",
                   maxWidth: "200px",
+                  background: "#2A2A2E",
+                  padding: "8px",
+                  borderRadius: "4px",
                 }}
               >
                 <img
@@ -186,7 +196,7 @@ export function AlbumMap({
                   <div
                     style={{
                       fontSize: "12px",
-                      color: "#1A1A1F",
+                      color: "#E8E4DC",
                       marginBottom: "4px",
                       fontWeight: 500,
                     }}
@@ -199,7 +209,7 @@ export function AlbumMap({
                     style={{
                       fontFamily: "'IBM Plex Mono', monospace",
                       fontSize: "10px",
-                      color: "#1D7A86",
+                      color: "#4AABB8",
                       letterSpacing: "0.5px",
                     }}
                   >
@@ -216,7 +226,7 @@ export function AlbumMap({
                         marginTop: "6px",
                         fontFamily: "'IBM Plex Mono', monospace",
                         fontSize: "10px",
-                        color: "#6B6760",
+                        color: "#C4853A",
                         textDecoration: "none",
                       }}
                     >

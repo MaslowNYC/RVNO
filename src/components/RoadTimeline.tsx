@@ -4,21 +4,21 @@ import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import type { Album } from "@/lib/database.types";
 import { supabase } from "@/lib/supabase";
 
-// Colors matching our light theme Tailwind config
+// Colors matching dark workshop Tailwind config
 const C = {
-  paper: "#F5F0E8",
-  ink: "#1A1A1F",
-  inkMuted: "#4A4843",
-  inkDim: "#6B6760",
-  teal: "#1D7A86",
-  tealDark: "#155A63",
-  tealMuted: "#2A8B98",
-  road: "#8B7355",
-  roadDark: "#6B5A45",
-  roadEdge: "#5A4A38",
-  roadLine: "#D4C9B8",
-  dot: "#C44D22",
-  dotHover: "#A83D18",
+  paper: "#2A2A2E",      // Dark card background
+  ink: "#E8E4DC",        // Warm off-white
+  inkMuted: "#A8A49C",   // Muted text
+  inkDim: "#6B6760",     // Dim text
+  teal: "#4AABB8",       // Teal accent
+  tealDark: "#3A9BA8",   // Dark teal
+  tealMuted: "#3A8A96",  // Muted teal
+  road: "#4A4A4E",       // Road surface
+  roadDark: "#3A3A3E",   // Road shadow
+  roadEdge: "#2A2A2E",   // Road edge
+  roadLine: "#6B6760",   // Center line
+  dot: "#C4853A",        // Brass rivet copper
+  dotHover: "#D4954A",   // Hover copper
   white: "#FFFFFF",
 };
 
