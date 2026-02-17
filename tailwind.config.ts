@@ -6,27 +6,27 @@ const config: Config = {
     extend: {
       colors: {
         rvno: {
-          // Dark workshop theme - warm charcoal like a well-worn bench
+          // Dark workshop theme
           bg: "#1C1C1E",
           card: "#2A2A2E",
-          elevated: "#323236",
-          surface: "#3A3A3E",
+          elevated: "#333338",
+          surface: "#252528",
 
-          // Teal accent - used sparingly like a pinstripe
+          // Teal accent
           teal: "#4AABB8",
-          "teal-dark": "#3A9BA8",
+          "teal-dark": "#3A8A94",
           "teal-muted": "#3A8A96",
 
-          // Copper/brass accent - like old motorcycle hardware
+          // Copper/brass accent
           copper: "#C4853A",
           "copper-dark": "#A66E2C",
 
           // Paper color for RoadTimeline background
           paper: "#2A2A2E",
 
-          // Text - warm off-white like old paper
+          // Text
           ink: "#E8E4DC",
-          "ink-muted": "#A8A49C",
+          "ink-muted": "#9A958A",
           "ink-dim": "#6B6760",
 
           // Road visualization
@@ -35,12 +35,12 @@ const config: Config = {
           "road-edge": "#2A2A2E",
           "road-line": "#6B6760",
 
-          // Dots/markers in copper - like brass rivets
+          // Dots/markers in copper
           dot: "#C4853A",
           "dot-hover": "#D4954A",
 
-          // White for button text
-          white: "#FFFFFF",
+          // White
+          white: "#E8E4DC",
 
           // Subtle border
           border: "rgba(255,255,255,0.08)",

@@ -8,10 +8,10 @@ import { supabase } from "@/lib/supabase";
 const C = {
   paper: "#2A2A2E",      // Dark card background
   ink: "#E8E4DC",        // Warm off-white
-  inkMuted: "#A8A49C",   // Muted text
+  inkMuted: "#9A958A",   // Muted text
   inkDim: "#6B6760",     // Dim text
   teal: "#4AABB8",       // Teal accent
-  tealDark: "#3A9BA8",   // Dark teal
+  tealDark: "#3A8A94",   // Dark teal
   tealMuted: "#3A8A96",  // Muted teal
   road: "#4A4A4E",       // Road surface
   roadDark: "#3A3A3E",   // Road shadow
@@ -19,7 +19,7 @@ const C = {
   roadLine: "#6B6760",   // Center line
   dot: "#C4853A",        // Brass rivet copper
   dotHover: "#D4954A",   // Hover copper
-  white: "#FFFFFF",
+  white: "#E8E4DC",
 };
 
 type Point = { x: number; y: number };

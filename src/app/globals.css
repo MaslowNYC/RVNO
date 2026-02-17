@@ -8,13 +8,17 @@
   box-sizing: border-box;
 }
 
+html,
+body {
+  background: #1C1C1E !important;
+  color: #E8E4DC !important;
+}
+
 html {
   font-size: 100%; /* 16px base */
 }
 
 body {
-  background: #1C1C1E;
-  color: #E8E4DC;
   font-family: 'Atkinson Hyperlegible', system-ui, sans-serif;
   line-height: 1.7;
 }

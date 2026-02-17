@@ -121,21 +121,21 @@ export function CrewMap({ members }: { members: Member[] }) {
           <div style="clear: both;"></div>
           ${
             locationParts
-              ? `<div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #A8A49C; margin-top: 6px;">
+              ? `<div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #9A958A; margin-top: 6px;">
                   📍 ${locationParts}
                 </div>`
               : ""
           }
           ${
             member.bikes
-              ? `<div style="font-size: 11px; color: #A8A49C; margin-top: 4px;">
+              ? `<div style="font-size: 11px; color: #9A958A; margin-top: 4px;">
                   🏍️ ${member.bikes}
                 </div>`
               : ""
           }
           ${
             member.bio
-              ? `<div style="font-size: 11px; color: #A8A49C; margin-top: 6px; line-height: 1.4;">
+              ? `<div style="font-size: 11px; color: #9A958A; margin-top: 6px; line-height: 1.4;">
                   ${member.bio}
                 </div>`
               : ""
