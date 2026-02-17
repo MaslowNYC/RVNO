@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import type { Album, Member } from "@/lib/database.types";
+import type { Album, Member, Photo, MemberType } from "@/lib/database.types";
 
 export default function AdminPage() {
   const [session, setSession] = useState<any>(null);
@@ -327,7 +327,8 @@ function AlbumRow({
 }) {
   const [uploading, setUploading] = useState(false);
   const [expanded, setExpanded] = useState(false);
-  const [photos, setPhotos] = useState<any[]>([]);
+  const [photos, setPhotos] = useState<Photo[]>([]);
+  const [editingPhoto, setEditingPhoto] = useState<Photo | null>(null);
 
   async function loadPhotos() {
     const { data } = await supabase
@@ -338,20 +339,37 @@ function AlbumRow({
     if (data) setPhotos(data);
   }
 
-  async function extractGPS(file: File): Promise<{
-    lat: number;
-    lng: number;
-  } | null> {
+  async function extractGPSAndDate(file: File): Promise<{
+    lat: number | null;
+    lng: number | null;
+    takenAt: string | null;
+  }> {
     try {
       const exifr = await import("exifr");
-      const gps = await exifr.gps(file);
-      if (gps && gps.latitude && gps.longitude) {
-        return { lat: gps.latitude, lng: gps.longitude };
+      const data = await exifr.parse(file, ["GPSLatitude", "GPSLongitude", "DateTimeOriginal"]);
+
+      let lat: number | null = null;
+      let lng: number | null = null;
+      let takenAt: string | null = null;
+
+      if (data) {
+        // Get GPS
+        const gps = await exifr.gps(file);
+        if (gps && gps.latitude && gps.longitude) {
+          lat = gps.latitude;
+          lng = gps.longitude;
+        }
+
+        // Get date taken
+        if (data.DateTimeOriginal) {
+          takenAt = new Date(data.DateTimeOriginal).toISOString();
+        }
       }
+
+      return { lat, lng, takenAt };
     } catch {
-      // No GPS data — that's fine
+      return { lat: null, lng: null, takenAt: null };
     }
-    return null;
   }
 
   async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -366,9 +384,12 @@ function AlbumRow({
       const ext = file.name.split(".").pop();
       const fileName = `${album.id}/${Date.now()}-${i}.${ext}`;
 
-      // Try to extract GPS from first photo
-      if (i === 0) {
-        firstGPS = await extractGPS(file);
+      // Extract GPS and date from each photo
+      const { lat, lng, takenAt } = await extractGPSAndDate(file);
+
+      // Track first GPS for album fallback
+      if (i === 0 && lat && lng) {
+        firstGPS = { lat, lng };
       }
 
       const { error: uploadError } = await supabase.storage
@@ -384,11 +405,15 @@ function AlbumRow({
         .from("album-photos")
         .getPublicUrl(fileName);
 
+      // Insert photo with individual GPS coordinates
       await supabase.from("photos").insert({
         album_id: album.id,
         url: urlData.publicUrl,
         caption: null,
         sort_order: photos.length + i,
+        location_lat: lat,
+        location_lng: lng,
+        taken_at: takenAt,
       });
 
       // Set first photo as cover if none exists
@@ -505,25 +530,24 @@ function AlbumRow({
               {photos.map((photo) => (
                 <div
                   key={photo.id}
-                  className="aspect-square bg-rvno-surface rounded overflow-hidden relative group"
+                  className="aspect-square bg-rvno-surface rounded overflow-hidden relative group cursor-pointer"
+                  onClick={() => setEditingPhoto(photo)}
                 >
                   <img
                     src={photo.url}
                     alt=""
                     className="w-full h-full object-cover"
                   />
-                  <button
-                    onClick={async () => {
-                      await supabase
-                        .from("photos")
-                        .delete()
-                        .eq("id", photo.id);
-                      loadPhotos();
-                    }}
-                    className="absolute top-1 right-1 w-5 h-5 bg-black/60 rounded-full text-white/60 hover:text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
-                  >
-                    ✕
-                  </button>
+                  {photo.location_lat && (
+                    <span className="absolute bottom-0.5 left-0.5 text-[8px] bg-black/50 text-white/80 px-1 rounded">
+                      📍
+                    </span>
+                  )}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                    <span className="text-white/0 group-hover:text-white/80 text-[10px] font-mono">
+                      Edit
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>
@@ -534,8 +558,161 @@ function AlbumRow({
               No photos yet. Click &quot;+ Add Photos&quot; to upload some.
             </p>
           )}
+
+          {/* Photo Edit Modal */}
+          {editingPhoto && (
+            <PhotoEditModal
+              photo={editingPhoto}
+              onClose={() => setEditingPhoto(null)}
+              onSave={() => {
+                setEditingPhoto(null);
+                loadPhotos();
+              }}
+            />
+          )}
         </div>
       )}
+    </div>
+  );
+}
+
+function PhotoEditModal({
+  photo,
+  onClose,
+  onSave,
+}: {
+  photo: Photo;
+  onClose: () => void;
+  onSave: () => void;
+}) {
+  const [caption, setCaption] = useState(photo.caption || "");
+  const [lat, setLat] = useState(photo.location_lat?.toString() || "");
+  const [lng, setLng] = useState(photo.location_lng?.toString() || "");
+  const [takenAt, setTakenAt] = useState(
+    photo.taken_at ? photo.taken_at.split("T")[0] : ""
+  );
+  const [saving, setSaving] = useState(false);
+
+  async function handleSave() {
+    setSaving(true);
+    await supabase
+      .from("photos")
+      .update({
+        caption: caption || null,
+        location_lat: lat ? parseFloat(lat) : null,
+        location_lng: lng ? parseFloat(lng) : null,
+        taken_at: takenAt ? new Date(takenAt).toISOString() : null,
+      })
+      .eq("id", photo.id);
+    setSaving(false);
+    onSave();
+  }
+
+  async function handleDelete() {
+    if (!confirm("Delete this photo?")) return;
+    await supabase.from("photos").delete().eq("id", photo.id);
+    onSave();
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+      <div className="bg-rvno-elevated rounded-lg border border-white/[0.06] max-w-md w-full p-5">
+        <div className="flex items-start gap-4 mb-4">
+          <img
+            src={photo.url}
+            alt=""
+            className="w-24 h-24 object-cover rounded"
+          />
+          <div className="flex-1">
+            <h3 className="font-display text-sm font-semibold text-rvno-ink mb-1">
+              Edit Photo
+            </h3>
+            <p className="font-mono text-[9px] text-rvno-ink-dim">
+              {photo.location_lat
+                ? `📍 ${photo.location_lat.toFixed(4)}, ${photo.location_lng?.toFixed(4)}`
+                : "No GPS data"}
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <div>
+            <label className="font-mono text-[9px] text-rvno-ink-dim uppercase tracking-wide block mb-1">
+              Caption
+            </label>
+            <input
+              type="text"
+              value={caption}
+              onChange={(e) => setCaption(e.target.value)}
+              placeholder="Add a caption..."
+              className="w-full bg-rvno-card border border-white/[0.06] rounded px-3 py-2 font-mono text-sm text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
+            />
+          </div>
+
+          <div>
+            <label className="font-mono text-[9px] text-rvno-ink-dim uppercase tracking-wide block mb-1">
+              Date Taken
+            </label>
+            <input
+              type="date"
+              value={takenAt}
+              onChange={(e) => setTakenAt(e.target.value)}
+              className="w-full bg-rvno-card border border-white/[0.06] rounded px-3 py-2 font-mono text-sm text-rvno-ink focus:outline-none focus:border-rvno-teal/40"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="font-mono text-[9px] text-rvno-ink-dim uppercase tracking-wide block mb-1">
+                Latitude
+              </label>
+              <input
+                type="text"
+                value={lat}
+                onChange={(e) => setLat(e.target.value)}
+                placeholder="37.27"
+                className="w-full bg-rvno-card border border-white/[0.06] rounded px-3 py-2 font-mono text-sm text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
+              />
+            </div>
+            <div>
+              <label className="font-mono text-[9px] text-rvno-ink-dim uppercase tracking-wide block mb-1">
+                Longitude
+              </label>
+              <input
+                type="text"
+                value={lng}
+                onChange={(e) => setLng(e.target.value)}
+                placeholder="-79.94"
+                className="w-full bg-rvno-card border border-white/[0.06] rounded px-3 py-2 font-mono text-sm text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between mt-5 pt-4 border-t border-white/[0.06]">
+          <button
+            onClick={handleDelete}
+            className="font-mono text-[10px] text-rvno-dot hover:text-red-400 tracking-wide"
+          >
+            Delete Photo
+          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={onClose}
+              className="font-mono text-[10px] text-rvno-ink-dim hover:text-rvno-ink tracking-wide px-3 py-1.5"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="bg-rvno-teal-dark text-rvno-white font-mono text-xs px-3 py-1.5 rounded hover:bg-rvno-teal transition-colors disabled:opacity-50"
+            >
+              {saving ? "Saving..." : "Save"}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -558,6 +735,7 @@ function NewMemberForm({
   const [country, setCountry] = useState("US");
   const [lat, setLat] = useState("");
   const [lng, setLng] = useState("");
+  const [memberType, setMemberType] = useState<MemberType>("member");
   const [saving, setSaving] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -579,6 +757,7 @@ function NewMemberForm({
       location_lat: lat ? parseFloat(lat) : null,
       location_lng: lng ? parseFloat(lng) : null,
       sort_order: memberCount + 1,
+      member_type: memberType,
     });
 
     setSaving(false);
@@ -607,6 +786,27 @@ function NewMemberForm({
           className="bg-rvno-elevated border border-white/[0.06] rounded px-3 py-2 font-mono text-sm text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
         />
       </div>
+
+      {/* Member Type Toggle */}
+      <div className="flex gap-2">
+        {(["member", "friend"] as const).map((type) => (
+          <button
+            key={type}
+            type="button"
+            onClick={() => setMemberType(type)}
+            className={`px-3 py-1.5 rounded font-mono text-xs tracking-wide transition-all border ${
+              memberType === type
+                ? type === "member"
+                  ? "bg-rvno-teal-dark text-rvno-white border-rvno-teal"
+                  : "bg-rvno-dot/80 text-rvno-white border-rvno-dot"
+                : "bg-transparent text-rvno-ink-dim border-white/[0.06] hover:text-rvno-ink-muted"
+            }`}
+          >
+            {type === "member" ? "Member" : "Friend of RVNO"}
+          </button>
+        ))}
+      </div>
+
       <input
         type="text"
         placeholder="Bikes (e.g., 1973 Norton 750 Commando)"
@@ -678,33 +878,91 @@ function MemberRow({
   member: Member;
   onUpdate: () => void;
 }) {
+  const [editing, setEditing] = useState(false);
+  const [memberType, setMemberType] = useState<MemberType>(member.member_type);
+
   async function deleteMember() {
     if (!confirm(`Remove ${member.name}?`)) return;
     await supabase.from("members").delete().eq("id", member.id);
     onUpdate();
   }
 
+  async function updateType(newType: MemberType) {
+    setMemberType(newType);
+    await supabase
+      .from("members")
+      .update({ member_type: newType })
+      .eq("id", member.id);
+    onUpdate();
+  }
+
   return (
-    <div className="bg-rvno-card rounded-lg border border-white/[0.06] p-4 flex items-center justify-between">
-      <div>
-        <h3 className="font-display text-sm font-semibold text-rvno-ink">
-          {member.name}
-        </h3>
-        <p className="font-mono text-[10px] text-rvno-teal tracking-wide mt-0.5">
-          {[member.title, member.location_name].filter(Boolean).join(" · ")}
-        </p>
-        {member.bikes && (
-          <p className="font-mono text-[10px] text-rvno-ink-dim mt-0.5">
-            🏍️ {member.bikes}
+    <div className="bg-rvno-card rounded-lg border border-white/[0.06] p-4">
+      <div className="flex items-center justify-between">
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <h3 className="font-display text-sm font-semibold text-rvno-ink">
+              {member.name}
+            </h3>
+            <span
+              className={`font-mono text-[8px] px-1.5 py-0.5 rounded tracking-wide ${
+                member.member_type === "member"
+                  ? "bg-rvno-teal/20 text-rvno-teal"
+                  : "bg-rvno-dot/20 text-rvno-dot"
+              }`}
+            >
+              {member.member_type === "member" ? "MEMBER" : "FRIEND"}
+            </span>
+          </div>
+          <p className="font-mono text-[10px] text-rvno-teal tracking-wide mt-0.5">
+            {[member.title, member.location_name].filter(Boolean).join(" · ")}
           </p>
-        )}
+          {member.bikes && (
+            <p className="font-mono text-[10px] text-rvno-ink-dim mt-0.5">
+              🏍️ {member.bikes}
+            </p>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setEditing(!editing)}
+            className="font-mono text-[9px] text-rvno-ink-dim hover:text-rvno-teal tracking-wide"
+          >
+            Edit
+          </button>
+          <button
+            onClick={deleteMember}
+            className="font-mono text-[9px] text-rvno-ink-dim hover:text-rvno-dot tracking-wide"
+          >
+            Delete
+          </button>
+        </div>
       </div>
-      <button
-        onClick={deleteMember}
-        className="font-mono text-[9px] text-rvno-ink-dim hover:text-rvno-dot tracking-wide"
-      >
-        Delete
-      </button>
+
+      {editing && (
+        <div className="mt-3 pt-3 border-t border-white/[0.06]">
+          <label className="font-mono text-[9px] text-rvno-ink-dim uppercase tracking-wide block mb-2">
+            Member Type
+          </label>
+          <div className="flex gap-2">
+            {(["member", "friend"] as const).map((type) => (
+              <button
+                key={type}
+                onClick={() => updateType(type)}
+                className={`px-3 py-1.5 rounded font-mono text-xs tracking-wide transition-all border ${
+                  memberType === type
+                    ? type === "member"
+                      ? "bg-rvno-teal-dark text-rvno-white border-rvno-teal"
+                      : "bg-rvno-dot/80 text-rvno-white border-rvno-dot"
+                    : "bg-transparent text-rvno-ink-dim border-white/[0.06] hover:text-rvno-ink-muted"
+                }`}
+              >
+                {type === "member" ? "Member" : "Friend of RVNO"}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

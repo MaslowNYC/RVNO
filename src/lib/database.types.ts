@@ -7,6 +7,8 @@ export type Album = {
   location_lat: number | null;
   location_lng: number | null;
   cover_photo_url: string | null;
+  offset_x: number | null;
+  offset_y: number | null;
   created_at: string;
   updated_at: string;
 };
@@ -17,8 +19,13 @@ export type Photo = {
   url: string;
   caption: string | null;
   sort_order: number;
+  location_lat: number | null;
+  location_lng: number | null;
+  taken_at: string | null;
   created_at: string;
 };
+
+export type MemberType = "member" | "friend";
 
 export type Member = {
   id: string;
@@ -34,6 +41,7 @@ export type Member = {
   city: string | null;
   state: string | null;
   country: string | null;
+  member_type: MemberType;
   created_at: string;
 };
 
@@ -45,6 +53,8 @@ export type AlbumInsert = {
   location_lat?: number | null;
   location_lng?: number | null;
   cover_photo_url?: string | null;
+  offset_x?: number | null;
+  offset_y?: number | null;
 };
 
 export type PhotoInsert = {
@@ -52,6 +62,9 @@ export type PhotoInsert = {
   url: string;
   caption?: string | null;
   sort_order?: number;
+  location_lat?: number | null;
+  location_lng?: number | null;
+  taken_at?: string | null;
 };
 
 export type MemberInsert = {
@@ -67,6 +80,7 @@ export type MemberInsert = {
   city?: string | null;
   state?: string | null;
   country?: string | null;
+  member_type?: MemberType;
 };
 
 export type Database = {

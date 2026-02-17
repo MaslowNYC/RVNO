@@ -1,4 +1,6 @@
 export default function ContactPage() {
+  const mailtoLink = `mailto:finklerrah@gmail.com?cc=iampatrickmay@gmail.com&subject=${encodeURIComponent("RVNO Website Inquiry")}`;
+
   return (
     <div className="max-w-2xl mx-auto px-5 py-12">
       <header className="mb-10">
@@ -12,18 +14,22 @@ export default function ContactPage() {
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Contact info */}
+        {/* Contact action */}
         <div className="space-y-5">
           <div>
-            <h3 className="font-mono text-[10px] text-rvno-teal tracking-wide uppercase mb-1.5">
-              Email
+            <h3 className="font-mono text-[10px] text-rvno-teal tracking-wide uppercase mb-3">
+              Reach Out
             </h3>
             <a
-              href="mailto:mark@roanokevalleynortonowners.com"
-              className="font-body text-sm text-rvno-ink hover:text-rvno-teal transition-colors no-underline"
+              href={mailtoLink}
+              className="inline-flex items-center gap-2 bg-rvno-teal-dark text-rvno-white font-mono text-sm px-5 py-2.5 rounded hover:bg-rvno-teal transition-colors"
             >
-              mark@roanokevalleynortonowners.com
+              <span>Email Mark</span>
+              <span className="text-xs opacity-70">→</span>
             </a>
+            <p className="font-mono text-[9px] text-rvno-ink-dim mt-2">
+              Opens your email app with subject pre-filled
+            </p>
           </div>
 
           <div>

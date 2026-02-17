@@ -17,7 +17,7 @@ Go to your Supabase project dashboard → **SQL Editor** → paste the contents 
 ### 2. Create Mark's Admin Account
 
 In Supabase dashboard → **Authentication** → **Users** → **Add User**:
-- Email: `mark@roanokevalleynortonowners.com` (or whatever he wants)
+- Email: Mark's preferred email address
 - Password: something he'll remember
 - Auto-confirm: yes
 

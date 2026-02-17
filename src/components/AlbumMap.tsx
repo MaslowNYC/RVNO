@@ -1,20 +1,26 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { Album } from "@/lib/database.types";
+import type { Album, Photo } from "@/lib/database.types";
 
-type AlbumWithCount = Album & { photo_count?: number };
+type PhotoWithAlbum = Photo & { album?: Album };
 
 // Dynamically import Leaflet (it needs window)
 let L: typeof import("leaflet") | null = null;
 
-export function AlbumMap({ albums }: { albums: AlbumWithCount[] }) {
+export function AlbumMap({
+  albums,
+  photos,
+}: {
+  albums: (Album & { photo_count?: number })[];
+  photos: PhotoWithAlbum[];
+}) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<any>(null);
   const [ready, setReady] = useState(false);
 
-  // Filter albums with coordinates
-  const mappableAlbums = albums.filter((a) => a.location_lat && a.location_lng);
+  // Filter photos with coordinates
+  const mappablePhotos = photos.filter((p) => p.location_lat && p.location_lng);
 
   useEffect(() => {
     // Dynamic import for SSR safety
@@ -62,80 +68,85 @@ export function AlbumMap({ albums }: { albums: AlbumWithCount[] }) {
       }
     ).addTo(map);
 
-    // Custom marker icon
-    const dotIcon = L.divIcon({
-      className: "rvno-map-marker",
+    // Custom marker icon for photos
+    const photoIcon = L.divIcon({
+      className: "rvno-photo-marker",
       html: `<div style="
-        width: 14px; height: 14px;
+        width: 12px; height: 12px;
         background: #D4582A;
         border: 2px solid #2C2A26;
         border-radius: 50%;
         box-shadow: 0 2px 6px rgba(0,0,0,0.4);
       "></div>`,
-      iconSize: [14, 14],
-      iconAnchor: [7, 7],
-      popupAnchor: [0, -10],
+      iconSize: [12, 12],
+      iconAnchor: [6, 6],
+      popupAnchor: [0, -8],
     });
 
-    // Add album markers
+    // Add photo markers
     const markers: any[] = [];
-    mappableAlbums.forEach((album) => {
-      if (!L || !album.location_lat || !album.location_lng) return;
+    mappablePhotos.forEach((photo) => {
+      if (!L || !photo.location_lat || !photo.location_lng) return;
 
-      const marker = L.marker([album.location_lat, album.location_lng], {
-        icon: dotIcon,
+      const marker = L.marker([photo.location_lat, photo.location_lng], {
+        icon: photoIcon,
       }).addTo(map);
 
-      const date = new Date(album.event_date + "T00:00:00").toLocaleDateString(
-        "en-US",
-        { month: "short", year: "numeric" }
-      );
+      const album = albums.find((a) => a.id === photo.album_id);
+      const takenDate = photo.taken_at
+        ? new Date(photo.taken_at).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          })
+        : null;
 
       const popupContent = `
         <div style="
           font-family: 'Source Serif 4', Georgia, serif;
-          min-width: 180px;
-          max-width: 220px;
+          min-width: 160px;
+          max-width: 200px;
         ">
+          <img src="${photo.url}" style="
+            width: 100%; height: 100px; object-fit: cover;
+            border-radius: 4px 4px 0 0; margin: -12px -12px 8px -12px;
+            width: calc(100% + 24px);
+          " />
           ${
-            album.cover_photo_url
-              ? `<img src="${album.cover_photo_url}" style="
-                  width: 100%; height: 100px; object-fit: cover;
-                  border-radius: 4px 4px 0 0; margin: -12px -12px 8px -12px;
-                  width: calc(100% + 24px);
-                " />`
-              : ""
-          }
-          <div style="font-family: 'Playfair Display', Georgia, serif; font-size: 14px; font-weight: 600; color: #1A1A1F; margin-bottom: 2px;">
-            ${album.title}
-          </div>
-          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #4AABB8; letter-spacing: 0.5px;">
-            ${date} · ${album.location_name}
-          </div>
-          ${
-            album.description
-              ? `<div style="font-size: 11px; color: #6B6760; margin-top: 6px; line-height: 1.4;">
-                  ${album.description.slice(0, 100)}${album.description.length > 100 ? "…" : ""}
+            photo.caption
+              ? `<div style="font-size: 12px; color: #1A1A1F; margin-bottom: 4px; font-weight: 500;">
+                  ${photo.caption}
                 </div>`
               : ""
           }
-          <a href="/album/${album.id}" style="
-            display: inline-block; margin-top: 6px;
-            font-family: 'IBM Plex Mono', monospace; font-size: 10px;
-            color: #4AABB8; text-decoration: none;
-          ">View album →</a>
+          ${
+            takenDate
+              ? `<div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #4AABB8; letter-spacing: 0.5px;">
+                  ${takenDate}
+                </div>`
+              : ""
+          }
+          ${
+            album
+              ? `<a href="/album/${album.id}" style="
+                  display: inline-block; margin-top: 6px;
+                  font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+                  color: #6B6760; text-decoration: none;
+                ">${album.title} →</a>`
+              : ""
+          }
         </div>
       `;
 
       marker.bindPopup(popupContent, {
-        maxWidth: 240,
+        maxWidth: 220,
         className: "rvno-popup",
       });
 
       markers.push(marker);
     });
 
-    // Fit map to markers, or default to US view
+    // Fit map to markers, or default to Roanoke Valley
     if (markers.length > 0) {
       const group = L.featureGroup(markers);
       map.fitBounds(group.getBounds().pad(0.3));
@@ -149,20 +160,20 @@ export function AlbumMap({ albums }: { albums: AlbumWithCount[] }) {
       map.remove();
       mapInstance.current = null;
     };
-  }, [ready, mappableAlbums]);
+  }, [ready, mappablePhotos, albums]);
 
-  if (mappableAlbums.length === 0) {
+  if (mappablePhotos.length === 0) {
     return (
       <div className="max-w-[760px] mx-auto bg-rvno-card rounded-md border border-white/[0.06] p-9 text-center min-h-[360px] flex flex-col items-center justify-center gap-3.5">
         <div className="w-11 h-11 rounded-full bg-gradient-to-br from-rvno-teal to-rvno-teal-dark flex items-center justify-center text-lg">
           🗺️
         </div>
         <h2 className="font-display text-base text-rvno-ink">
-          No Mapped Rides Yet
+          No Mapped Photos Yet
         </h2>
         <p className="font-body text-xs text-rvno-ink-muted max-w-xs leading-relaxed">
-          Albums with GPS coordinates will appear here as pins on the map.
-          Upload photos with location data, or set coordinates when creating albums.
+          Photos with GPS coordinates will appear here as pins on the map.
+          Upload photos with location data to see them mapped.
         </p>
       </div>
     );
@@ -189,8 +200,7 @@ export function AlbumMap({ albums }: { albums: AlbumWithCount[] }) {
         style={{ height: "500px" }}
       />
       <p className="text-center font-mono text-[9px] text-rvno-ink-dim tracking-wide mt-2">
-        {mappableAlbums.length} LOCATIONS ·{" "}
-        {mappableAlbums.reduce((s, a) => s + (a.photo_count || 0), 0)} PHOTOS
+        {mappablePhotos.length} PHOTO LOCATIONS
       </p>
     </div>
   );

@@ -1,13 +1,41 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { RoadTimeline } from "@/components/RoadTimeline";
-import type { Album } from "@/lib/database.types";
+import { AlbumMap } from "@/components/AlbumMap";
+import { supabase } from "@/lib/supabase";
+import type { Album, Photo } from "@/lib/database.types";
 
 type AlbumWithCount = Album & { photo_count: number };
 
 export function HomeContent({ albums }: { albums: AlbumWithCount[] }) {
   const [view, setView] = useState<"road" | "map">("road");
+  const [photos, setPhotos] = useState<Photo[]>([]);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Check if user is admin
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAdmin(!!session);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAdmin(!!session);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Load photos with GPS for the map
+  useEffect(() => {
+    async function loadPhotos() {
+      const { data } = await supabase
+        .from("photos")
+        .select("*")
+        .not("location_lat", "is", null)
+        .not("location_lng", "is", null);
+      if (data) setPhotos(data);
+    }
+    loadPhotos();
+  }, []);
 
   return (
     <div className="pb-10">
@@ -34,22 +62,9 @@ export function HomeContent({ albums }: { albums: AlbumWithCount[] }) {
       {/* Content */}
       <div className="px-3">
         {view === "road" ? (
-          <RoadTimeline albums={albums} />
+          <RoadTimeline albums={albums} isAdmin={isAdmin} />
         ) : (
-          <div className="max-w-[760px] mx-auto bg-rvno-card rounded-md border border-white/[0.06] p-9 text-center min-h-[360px] flex flex-col items-center justify-center gap-3.5">
-            <div className="w-11 h-11 rounded-full bg-gradient-to-br from-rvno-teal to-rvno-teal-dark flex items-center justify-center text-lg">
-              🗺️
-            </div>
-            <h2 className="font-display text-base text-rvno-ink">Map View</h2>
-            <p className="font-body text-xs text-rvno-ink-muted max-w-xs leading-relaxed">
-              Interactive map with album pins at ride locations. Click a pin to
-              view the album. Coming soon.
-            </p>
-            <p className="font-mono text-[9px] text-rvno-teal tracking-wide mt-1.5">
-              {albums.length} LOCATIONS ·{" "}
-              {albums.reduce((s, a) => s + a.photo_count, 0)} PHOTOS
-            </p>
-          </div>
+          <AlbumMap albums={albums} photos={photos} />
         )}
       </div>
     </div>

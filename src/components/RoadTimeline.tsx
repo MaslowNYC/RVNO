@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import type { Album } from "@/lib/database.types";
+import { supabase } from "@/lib/supabase";
 
 // Colors matching our Tailwind config
 const C = {
@@ -58,9 +59,13 @@ type TimelineAlbum = Album & { photo_count?: number };
 
 interface RoadTimelineProps {
   albums: TimelineAlbum[];
+  isAdmin?: boolean;
 }
 
-export function RoadTimeline({ albums }: RoadTimelineProps) {
+// Track offsets per album for draggable dots
+type OffsetMap = Record<string, { x: number; y: number }>;
+
+export function RoadTimeline({ albums, isAdmin = false }: RoadTimelineProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [hoveredAlbum, setHoveredAlbum] = useState<TimelineAlbum | null>(null);
   const [hoverPos, setHoverPos] = useState({ x: 0, y: 0 });
@@ -68,8 +73,22 @@ export function RoadTimeline({ albums }: RoadTimelineProps) {
   const [width, setWidth] = useState(700);
   const [roadData, setRoadData] = useState<ReturnType<typeof generateRoadPath> | null>(null);
 
+  // Admin drag state
+  const [offsets, setOffsets] = useState<OffsetMap>({});
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const dragStartRef = useRef<{ x: number; y: number; offsetX: number; offsetY: number } | null>(null);
+
   const albumCount = albums.length;
   const roadHeight = Math.max(900, albumCount * 95 + 160);
+
+  // Initialize offsets from album data
+  useEffect(() => {
+    const initial: OffsetMap = {};
+    albums.forEach((a) => {
+      initial[a.id] = { x: a.offset_x ?? 0, y: a.offset_y ?? 0 };
+    });
+    setOffsets(initial);
+  }, [albums]);
 
   useEffect(() => {
     const update = () => {
@@ -81,6 +100,70 @@ export function RoadTimeline({ albums }: RoadTimelineProps) {
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
   }, []);
+
+  // Save offset to Supabase
+  const saveOffset = useCallback(async (albumId: string, offsetX: number, offsetY: number) => {
+    await supabase
+      .from("albums")
+      .update({ offset_x: offsetX, offset_y: offsetY })
+      .eq("id", albumId);
+  }, []);
+
+  // Drag handlers
+  const handleDragStart = useCallback(
+    (e: React.MouseEvent | React.TouchEvent, albumId: string) => {
+      if (!isAdmin) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+      const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+      const current = offsets[albumId] || { x: 0, y: 0 };
+      dragStartRef.current = { x: clientX, y: clientY, offsetX: current.x, offsetY: current.y };
+      setDraggingId(albumId);
+    },
+    [isAdmin, offsets]
+  );
+
+  const handleDragMove = useCallback(
+    (e: MouseEvent | TouchEvent) => {
+      if (!draggingId || !dragStartRef.current) return;
+      const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+      const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+      const dx = clientX - dragStartRef.current.x;
+      const dy = clientY - dragStartRef.current.y;
+      setOffsets((prev) => ({
+        ...prev,
+        [draggingId]: {
+          x: Math.max(-40, Math.min(40, dragStartRef.current!.offsetX + dx)),
+          y: Math.max(-30, Math.min(30, dragStartRef.current!.offsetY + dy)),
+        },
+      }));
+    },
+    [draggingId]
+  );
+
+  const handleDragEnd = useCallback(() => {
+    if (draggingId && offsets[draggingId]) {
+      saveOffset(draggingId, offsets[draggingId].x, offsets[draggingId].y);
+    }
+    setDraggingId(null);
+    dragStartRef.current = null;
+  }, [draggingId, offsets, saveOffset]);
+
+  // Global drag listeners
+  useEffect(() => {
+    if (!draggingId) return;
+    window.addEventListener("mousemove", handleDragMove);
+    window.addEventListener("mouseup", handleDragEnd);
+    window.addEventListener("touchmove", handleDragMove);
+    window.addEventListener("touchend", handleDragEnd);
+    return () => {
+      window.removeEventListener("mousemove", handleDragMove);
+      window.removeEventListener("mouseup", handleDragEnd);
+      window.removeEventListener("touchmove", handleDragMove);
+      window.removeEventListener("touchend", handleDragEnd);
+    };
+  }, [draggingId, handleDragMove, handleDragEnd]);
 
   useEffect(() => {
     if (width > 0) setRoadData(generateRoadPath(width, roadHeight, albumCount));
@@ -192,46 +275,75 @@ export function RoadTimeline({ albums }: RoadTimelineProps) {
         {roadData.points.slice(0, albumCount).map((point, idx) => {
           const album = albums[idx];
           const isHovered = hoveredAlbum?.id === album.id;
-          const labelSide = point.x > width / 2 ? "left" : "right";
-          const labelX = labelSide === "right" ? point.x + 18 : point.x - 18;
+          const isDragging = draggingId === album.id;
+          const offset = offsets[album.id] || { x: 0, y: 0 };
+          const dotX = point.x + offset.x;
+          const dotY = point.y + offset.y;
+          const labelSide = dotX > width / 2 ? "left" : "right";
+          const labelX = labelSide === "right" ? dotX + 18 : dotX - 18;
 
           return (
             <g
               key={album.id}
-              onMouseEnter={() => handleDotHover(album, point)}
-              onMouseLeave={() => setHoveredAlbum(null)}
-              onClick={() => window.location.href = `/album/${album.id}`}
-              style={{ cursor: "pointer" }}
+              onMouseEnter={() => !isDragging && handleDotHover(album, { x: dotX, y: dotY })}
+              onMouseLeave={() => !isDragging && setHoveredAlbum(null)}
+              onClick={(e) => {
+                if (isAdmin && !isDragging) {
+                  // Admin click without drag: still navigate
+                  const moved = dragStartRef.current
+                    ? Math.abs(offset.x - (dragStartRef.current.offsetX)) > 3 ||
+                      Math.abs(offset.y - (dragStartRef.current.offsetY)) > 3
+                    : false;
+                  if (!moved) window.location.href = `/album/${album.id}`;
+                } else if (!isAdmin) {
+                  window.location.href = `/album/${album.id}`;
+                }
+              }}
+              onMouseDown={(e) => isAdmin && handleDragStart(e, album.id)}
+              onTouchStart={(e) => isAdmin && handleDragStart(e, album.id)}
+              style={{ cursor: isAdmin ? (isDragging ? "grabbing" : "grab") : "pointer" }}
             >
               <line
-                x1={point.x} y1={point.y} x2={labelX} y2={point.y}
-                stroke={isHovered ? C.dot : C.inkDim}
-                strokeWidth={isHovered ? 1 : 0.4}
-                opacity={isHovered ? 0.7 : 0.25}
-                strokeDasharray={isHovered ? "none" : "2,2"}
+                x1={dotX} y1={dotY} x2={labelX} y2={dotY}
+                stroke={isHovered || isDragging ? C.dot : C.inkDim}
+                strokeWidth={isHovered || isDragging ? 1 : 0.4}
+                opacity={isHovered || isDragging ? 0.7 : 0.25}
+                strokeDasharray={isHovered || isDragging ? "none" : "2,2"}
               />
 
-              {isHovered && (
-                <circle cx={point.x} cy={point.y} r="14" fill="rgba(212,88,42,0.25)" filter="url(#glow)" />
+              {(isHovered || isDragging) && (
+                <circle cx={dotX} cy={dotY} r="14" fill="rgba(212,88,42,0.25)" filter="url(#glow)" />
+              )}
+
+              {/* Admin mode indicator ring */}
+              {isAdmin && (
+                <circle
+                  cx={dotX} cy={dotY} r="10"
+                  fill="none"
+                  stroke={C.teal}
+                  strokeWidth="1"
+                  strokeDasharray="3,2"
+                  opacity={isDragging ? 0.8 : 0.3}
+                />
               )}
 
               <circle
-                cx={point.x} cy={point.y} r={isHovered ? 7 : 5}
-                fill={isHovered ? C.dotHover : C.dot}
+                cx={dotX} cy={dotY} r={isHovered || isDragging ? 7 : 5}
+                fill={isDragging ? C.teal : (isHovered ? C.dotHover : C.dot)}
                 stroke={C.paper} strokeWidth="2"
-                style={{ transition: "all 0.15s ease" }}
+                style={{ transition: isDragging ? "none" : "all 0.15s ease" }}
               />
-              <circle cx={point.x} cy={point.y} r="1.5" fill={C.white} opacity="0.7" />
+              <circle cx={dotX} cy={dotY} r="1.5" fill={C.white} opacity="0.7" />
 
               <text
                 x={labelX + (labelSide === "right" ? 5 : -5)}
-                y={point.y - 5}
+                y={dotY - 5}
                 textAnchor={labelSide === "right" ? "start" : "end"}
                 fontSize="8"
                 fontFamily="'IBM Plex Mono', monospace"
                 fontWeight="500"
-                fill={isHovered ? C.teal : C.inkDim}
-                opacity={isHovered ? 1 : 0.6}
+                fill={isHovered || isDragging ? C.teal : C.inkDim}
+                opacity={isHovered || isDragging ? 1 : 0.6}
                 letterSpacing="0.5"
               >
                 {formatDate(album.event_date)}
@@ -239,13 +351,13 @@ export function RoadTimeline({ albums }: RoadTimelineProps) {
 
               <text
                 x={labelX + (labelSide === "right" ? 5 : -5)}
-                y={point.y + 7}
+                y={dotY + 7}
                 textAnchor={labelSide === "right" ? "start" : "end"}
                 fontSize="10"
                 fontFamily="'Playfair Display', Georgia, serif"
-                fontWeight={isHovered ? "700" : "400"}
-                fill={isHovered ? C.ink : C.inkMuted}
-                style={{ transition: "all 0.15s" }}
+                fontWeight={isHovered || isDragging ? "700" : "400"}
+                fill={isHovered || isDragging ? C.ink : C.inkMuted}
+                style={{ transition: isDragging ? "none" : "all 0.15s" }}
               >
                 {album.title.length > 28 ? album.title.slice(0, 26) + "…" : album.title}
               </text>
