@@ -155,8 +155,20 @@ export function RoadTimeline({ albums, isAdmin = false }: RoadTimelineProps) {
       if (!isAdmin) return;
       e.preventDefault();
       e.stopPropagation();
-      const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
-      const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+
+      // Get client coordinates with null checks
+      let clientX: number;
+      let clientY: number;
+      if ("touches" in e && e.touches && e.touches.length > 0) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+      } else if ("clientX" in e) {
+        clientX = e.clientX;
+        clientY = e.clientY;
+      } else {
+        return; // Can't get coordinates, abort
+      }
+
       const current = offsets[albumId] || { x: 0, y: 0 };
       dragStartRef.current = { x: clientX, y: clientY, offsetX: current.x, offsetY: current.y };
       setDraggingId(albumId);
@@ -166,19 +178,35 @@ export function RoadTimeline({ albums, isAdmin = false }: RoadTimelineProps) {
 
   const handleDragMove = useCallback(
     (e: MouseEvent | TouchEvent) => {
-      if (!draggingId || !dragStartRef.current) return;
-      const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
-      const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
-      const dx = clientX - dragStartRef.current.x;
-      const dy = clientY - dragStartRef.current.y;
+      const dragStart = dragStartRef.current;
+      if (!draggingId || !dragStart) return;
+
+      // Get client coordinates with null checks
+      let clientX: number;
+      let clientY: number;
+      if ("touches" in e && e.touches && e.touches.length > 0) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+      } else if ("clientX" in e) {
+        clientX = e.clientX;
+        clientY = e.clientY;
+      } else {
+        return; // Can't get coordinates, abort
+      }
+
+      const dx = clientX - dragStart.x;
+      const dy = clientY - dragStart.y;
       // Clamp to keep dots within SVG bounds (with padding)
       const maxOffsetX = width * 0.4;
       const maxOffsetY = roadHeight * 0.1;
+      const startOffsetX = dragStart.offsetX;
+      const startOffsetY = dragStart.offsetY;
+
       setOffsets((prev) => ({
         ...prev,
         [draggingId]: {
-          x: Math.max(-maxOffsetX, Math.min(maxOffsetX, dragStartRef.current!.offsetX + dx)),
-          y: Math.max(-maxOffsetY, Math.min(maxOffsetY, dragStartRef.current!.offsetY + dy)),
+          x: Math.max(-maxOffsetX, Math.min(maxOffsetX, startOffsetX + dx)),
+          y: Math.max(-maxOffsetY, Math.min(maxOffsetY, startOffsetY + dy)),
         },
       }));
     },
@@ -186,8 +214,11 @@ export function RoadTimeline({ albums, isAdmin = false }: RoadTimelineProps) {
   );
 
   const handleDragEnd = useCallback(() => {
-    if (draggingId && offsets[draggingId]) {
-      saveOffset(draggingId, offsets[draggingId].x, offsets[draggingId].y);
+    if (draggingId) {
+      const currentOffset = offsets[draggingId];
+      if (currentOffset) {
+        saveOffset(draggingId, currentOffset.x, currentOffset.y);
+      }
     }
     setDraggingId(null);
     dragStartRef.current = null;
