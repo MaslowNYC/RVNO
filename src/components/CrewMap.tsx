@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import type { Member, MemberType } from "@/lib/database.types";
+import type { Member } from "@/lib/database.types";
 import { useAuth } from "@/lib/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
@@ -56,9 +56,6 @@ export function CrewMap({ members }: { members: Member[] }) {
     (m) => m.location_lat && m.location_lng
   );
 
-  const memberCount = mappableMembers.filter((m) => m.member_type === "member").length;
-  const friendCount = mappableMembers.filter((m) => m.member_type === "friend").length;
-
   useEffect(() => {
     import("leaflet").then((leaflet) => {
       L = leaflet;
@@ -88,13 +85,13 @@ export function CrewMap({ members }: { members: Member[] }) {
       }
     ).addTo(map);
 
-    // Custom member marker - teal for members, copper for friends (brass rivets)
-    const createMemberIcon = (initials: string, isFriend: boolean) =>
+    // Custom member marker - teal color
+    const createMemberIcon = (initials: string) =>
       L!.divIcon({
         className: "rvno-crew-marker",
         html: `<div style="
           width: 28px; height: 28px;
-          background: ${isFriend ? "#C4853A" : "#4AABB8"};
+          background: #4AABB8;
           border: 2px solid #1C1C1E;
           border-radius: 50%;
           box-shadow: 0 2px 8px rgba(0,0,0,0.5);
@@ -119,11 +116,9 @@ export function CrewMap({ members }: { members: Member[] }) {
         .join("")
         .slice(0, 2);
 
-      const isFriend = member.member_type === "friend";
-
       const marker = L.marker(
         [member.location_lat, member.location_lng],
-        { icon: createMemberIcon(initials, isFriend) }
+        { icon: createMemberIcon(initials) }
       ).addTo(map);
 
       const locationParts = [member.city, member.state, member.country]
@@ -143,7 +138,7 @@ export function CrewMap({ members }: { members: Member[] }) {
               ? `<img src="${member.photo_url}" style="
                   width: 50px; height: 50px; object-fit: cover;
                   border-radius: 50%; float: left; margin-right: 10px;
-                  border: 2px solid ${isFriend ? "#C4853A" : "#4AABB8"};
+                  border: 2px solid #4AABB8;
                 " />`
               : ""
           }
@@ -152,14 +147,11 @@ export function CrewMap({ members }: { members: Member[] }) {
           </div>
           ${
             member.title
-              ? `<div style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: ${isFriend ? "#C4853A" : "#4AABB8"}; text-transform: uppercase; letter-spacing: 1px; margin-top: 1px;">
+              ? `<div style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #4AABB8; text-transform: uppercase; letter-spacing: 1px; margin-top: 1px;">
                   ${member.title}
                 </div>`
               : ""
           }
-          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 8px; color: ${isFriend ? "#C4853A" : "#4AABB8"}; margin-top: 2px;">
-            ${isFriend ? "FRIEND OF RVNO" : "MEMBER"}
-          </div>
           <div style="clear: both;"></div>
           ${
             locationParts
@@ -295,13 +287,7 @@ export function CrewMap({ members }: { members: Member[] }) {
         <div className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded-full bg-rvno-teal border border-rvno-bg"></span>
           <span className="font-mono text-[9px] text-rvno-ink-dim tracking-wide">
-            MEMBERS ({memberCount})
-          </span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded-full bg-rvno-dot border border-rvno-bg"></span>
-          <span className="font-mono text-[9px] text-rvno-ink-dim tracking-wide">
-            FRIENDS ({friendCount})
+            MEMBERS ({mappableMembers.length})
           </span>
         </div>
       </div>

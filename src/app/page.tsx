@@ -40,7 +40,7 @@ async function getPhotosWithLocation() {
 async function getMembers() {
   const { data: members } = await supabase
     .from("members")
-    .select("*, member_type")
+    .select("*")
     .order("name", { ascending: true });
 
   return members || [];

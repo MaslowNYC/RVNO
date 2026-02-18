@@ -25,8 +25,6 @@ export type Photo = {
   created_at: string;
 };
 
-export type MemberType = "member" | "friend";
-
 export type Member = {
   id: string;
   name: string;
@@ -41,7 +39,6 @@ export type Member = {
   city: string | null;
   state: string | null;
   country: string | null;
-  member_type: MemberType;
   created_at: string;
 };
 
@@ -80,7 +77,6 @@ export type MemberInsert = {
   city?: string | null;
   state?: string | null;
   country?: string | null;
-  member_type?: MemberType;
 };
 
 export type PageContent = {

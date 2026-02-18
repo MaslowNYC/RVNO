@@ -6,9 +6,9 @@ export function Footer() {
       <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
         <div className="text-center md:text-left">
           <p className="font-body text-base text-rvno-ink-muted">
-            A small core of Norton enthusiasts in Virginia&apos;s Roanoke Valley.
+            A small core of Norton enthusiasts headquartered in Virginia&apos;s Roanoke Valley,
             <br />
-            <span className="text-rvno-ink-dim">Members worldwide. Bikes everywhere.</span>
+            <span className="text-rvno-ink-dim">with members throughout the US and the world.</span>
           </p>
         </div>
 

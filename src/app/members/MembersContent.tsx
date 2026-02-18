@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { EditButton } from "@/components/EditButton";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
-import type { Member, MemberType } from "@/lib/database.types";
+import type { Member } from "@/lib/database.types";
 
 interface MembersContentProps {
   initialMembers: Member[];
@@ -27,7 +27,6 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
     city: "",
     state: "",
     country: "",
-    member_type: "member",
   });
 
   function startEdit(member: Member) {
@@ -53,7 +52,6 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
         city: editForm.city || null,
         state: editForm.state || null,
         country: editForm.country || null,
-        member_type: editForm.member_type,
       })
       .eq("id", editForm.id);
     setSaving(false);
@@ -78,7 +76,6 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
       city: newMember.city || null,
       state: newMember.state || null,
       country: newMember.country || null,
-      member_type: newMember.member_type || "member",
       sort_order: initialMembers.length,
     });
     setSaving(false);
@@ -91,7 +88,6 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
       city: "",
       state: "",
       country: "",
-      member_type: "member",
     });
     router.refresh();
   }
@@ -198,19 +194,6 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
                         className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-3 py-2 font-body text-sm text-rvno-ink focus:outline-none focus:border-[#C4853A]/50"
                       />
                     </div>
-                    <select
-                      value={editForm.member_type || "member"}
-                      onChange={(e) =>
-                        setEditForm({
-                          ...editForm,
-                          member_type: e.target.value as MemberType,
-                        })
-                      }
-                      className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-4 py-3 font-body text-base text-rvno-ink focus:outline-none focus:border-[#C4853A]/50"
-                    >
-                      <option value="member">Member</option>
-                      <option value="friend">Friend of RVNO</option>
-                    </select>
                   </div>
                   <div className="flex justify-between mt-4">
                     <button
@@ -335,19 +318,6 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
                     placeholder="Bikes"
                     className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-4 py-3 font-body text-base text-rvno-ink focus:outline-none focus:border-[#C4853A]/50"
                   />
-                  <select
-                    value={newMember.member_type || "member"}
-                    onChange={(e) =>
-                      setNewMember({
-                        ...newMember,
-                        member_type: e.target.value as MemberType,
-                      })
-                    }
-                    className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-4 py-3 font-body text-base text-rvno-ink focus:outline-none focus:border-[#C4853A]/50"
-                  >
-                    <option value="member">Member</option>
-                    <option value="friend">Friend of RVNO</option>
-                  </select>
                 </div>
                 <div className="space-y-3">
                   <textarea
