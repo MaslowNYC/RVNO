@@ -74,36 +74,36 @@ export function CrewMap({ members }: { members: Member[] }) {
       maxZoom: 10,
     });
 
-    // OpenStreetMap tiles with vintage/muted CSS filter for that old Rand McNally feel
+    // Stadia Stamen Toner Lite - clean minimal style, perfect for vintage treatment
     const tileLayer = L.tileLayer(
-      "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+      "https://tiles.stadiamaps.com/tiles/stamen_toner_lite/{z}/{x}/{y}{r}.png",
       {
         attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a> &copy; <a href="https://stamen.com/">Stamen Design</a> &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
         maxZoom: 18,
-        className: "vintage-tiles",
+        className: "vintage-atlas",
       }
     ).addTo(map);
 
-    // Custom member marker - teal color
+    // Custom member marker - red dot like classic road atlas city markers
     const createMemberIcon = (initials: string) =>
       L!.divIcon({
         className: "rvno-crew-marker",
         html: `<div style="
-          width: 28px; height: 28px;
-          background: #4AABB8;
-          border: 2px solid #1C1C1E;
+          width: 24px; height: 24px;
+          background: #C41E3A;
+          border: 2px solid #8B0000;
           border-radius: 50%;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+          box-shadow: 0 1px 3px rgba(0,0,0,0.4);
           display: flex; align-items: center; justify-content: center;
           font-family: 'IBM Plex Mono', monospace;
-          font-size: 9px; font-weight: 600;
-          color: #E8E4DC;
+          font-size: 8px; font-weight: 700;
+          color: #FFFFFF;
           letter-spacing: 0.5px;
         ">${initials}</div>`,
-        iconSize: [28, 28],
-        iconAnchor: [14, 14],
-        popupAnchor: [0, -16],
+        iconSize: [24, 24],
+        iconAnchor: [12, 12],
+        popupAnchor: [0, -14],
       });
 
     const markers: any[] = [];
@@ -127,27 +127,27 @@ export function CrewMap({ members }: { members: Member[] }) {
 
       const popupContent = `
         <div style="
-          font-family: 'Atkinson Hyperlegible', system-ui, sans-serif;
+          font-family: Georgia, 'Times New Roman', serif;
           min-width: 160px; max-width: 200px;
-          background: #2A2A2E;
+          background: #F5F0E1;
           padding: 10px;
-          border-radius: 6px;
+          border-radius: 4px;
         ">
           ${
             member.photo_url
               ? `<img src="${member.photo_url}" style="
                   width: 50px; height: 50px; object-fit: cover;
                   border-radius: 50%; float: left; margin-right: 10px;
-                  border: 2px solid #4AABB8;
+                  border: 2px solid #8B4513;
                 " />`
               : ""
           }
-          <div style="font-family: 'Playfair Display', Georgia, serif; font-size: 14px; font-weight: 600; color: #E8E4DC;">
+          <div style="font-family: Georgia, 'Times New Roman', serif; font-size: 14px; font-weight: 700; color: #3C2415;">
             ${member.name}
           </div>
           ${
             member.title
-              ? `<div style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #4AABB8; text-transform: uppercase; letter-spacing: 1px; margin-top: 1px;">
+              ? `<div style="font-family: 'Courier New', monospace; font-size: 9px; color: #8B4513; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px;">
                   ${member.title}
                 </div>`
               : ""
@@ -155,21 +155,21 @@ export function CrewMap({ members }: { members: Member[] }) {
           <div style="clear: both;"></div>
           ${
             locationParts
-              ? `<div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #9A958A; margin-top: 6px;">
-                  📍 ${locationParts}
+              ? `<div style="font-family: 'Courier New', monospace; font-size: 10px; color: #5C4033; margin-top: 6px;">
+                  ${locationParts}
                 </div>`
               : ""
           }
           ${
             member.bikes
-              ? `<div style="font-size: 11px; color: #9A958A; margin-top: 4px;">
-                  🏍️ ${member.bikes}
+              ? `<div style="font-size: 11px; color: #5C4033; margin-top: 4px; font-style: italic;">
+                  ${member.bikes}
                 </div>`
               : ""
           }
           ${
             member.bio
-              ? `<div style="font-size: 11px; color: #9A958A; margin-top: 6px; line-height: 1.4;">
+              ? `<div style="font-size: 11px; color: #5C4033; margin-top: 6px; line-height: 1.4;">
                   ${member.bio}
                 </div>`
               : ""
@@ -182,16 +182,16 @@ export function CrewMap({ members }: { members: Member[] }) {
                   style="
                     margin-top: 8px;
                     padding: 4px 8px;
-                    background: transparent;
-                    border: 1px solid #C4853A;
-                    border-radius: 4px;
-                    color: #C4853A;
+                    background: #8B4513;
+                    border: none;
+                    border-radius: 3px;
+                    color: #F5F0E1;
                     font-size: 10px;
-                    font-family: 'Atkinson Hyperlegible', system-ui, sans-serif;
+                    font-family: Georgia, serif;
                     cursor: pointer;
                     width: 100%;
                   "
-                >Edit name & title</button>`
+                >Edit</button>`
               : ""
           }
         </div>
@@ -248,33 +248,40 @@ export function CrewMap({ members }: { members: Member[] }) {
       />
       <style>{`
         .rvno-crew-popup .leaflet-popup-content-wrapper {
-          background: #2A2A2E;
-          border-radius: 6px;
-          box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+          background: #F5F0E1;
+          border-radius: 4px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+          border: 1px solid #D4C9B0;
         }
         .rvno-crew-popup .leaflet-popup-tip {
-          background: #2A2A2E;
+          background: #F5F0E1;
+          border-left: 1px solid #D4C9B0;
+          border-bottom: 1px solid #D4C9B0;
         }
         .rvno-crew-popup .leaflet-popup-content {
           margin: 0;
         }
-        .vintage-tiles {
-          filter: brightness(0.7) saturate(0.6) contrast(1.1);
+        .vintage-atlas {
+          filter: sepia(0.35) saturate(0.8) brightness(1.05) contrast(0.95);
+        }
+        .leaflet-container {
+          background: #F5F0E1 !important;
         }
         .leaflet-control-zoom a {
-          background: #2A2A2E !important;
-          color: #E8E4DC !important;
-          border-color: #3A3A3E !important;
+          background: #F5F0E1 !important;
+          color: #5C4033 !important;
+          border-color: #D4C9B0 !important;
         }
         .leaflet-control-zoom a:hover {
-          background: #3A3A3E !important;
+          background: #EBE4D3 !important;
         }
         .leaflet-control-attribution {
-          background: rgba(28, 28, 30, 0.8) !important;
-          color: #6B6760 !important;
+          background: rgba(245, 240, 225, 0.9) !important;
+          color: #8B7355 !important;
+          font-size: 9px !important;
         }
         .leaflet-control-attribution a {
-          color: #4AABB8 !important;
+          color: #5C4033 !important;
         }
       `}</style>
       <div
@@ -285,7 +292,7 @@ export function CrewMap({ members }: { members: Member[] }) {
       {/* Legend */}
       <div className="flex items-center justify-center gap-6 mt-3">
         <div className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded-full bg-rvno-teal border border-rvno-bg"></span>
+          <span className="w-3 h-3 rounded-full bg-[#C41E3A] border border-[#8B0000]"></span>
           <span className="font-mono text-[9px] text-rvno-ink-dim tracking-wide">
             MEMBERS ({mappableMembers.length})
           </span>
