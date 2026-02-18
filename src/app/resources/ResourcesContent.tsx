@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { EditButton } from "@/components/EditButton";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
-import type { Resource } from "@/lib/database.types";
+import type { Resource, ResourceInsert } from "@/lib/database.types";
 
 interface ResourcesContentProps {
   initialResources: Resource[];
@@ -146,15 +146,28 @@ export function ResourcesContent({ initialResources }: ResourcesContentProps) {
   async function saveResource() {
     if (!editForm.id) return;
     setSaving(true);
-    await supabase
-      .from("resources")
-      .update({
-        section: editForm.section,
-        name: editForm.name,
-        url: editForm.url,
-        description: editForm.description,
-      })
-      .eq("id", editForm.id);
+
+    // If editing a default item, insert it as a new entry
+    if (editForm.id.startsWith("default-")) {
+      const insertData: ResourceInsert = {
+        section: editForm.section!,
+        name: editForm.name!,
+        url: editForm.url!,
+        description: editForm.description || null,
+        sort_order: editForm.sort_order ?? 0,
+      };
+      await supabase.from("resources").insert(insertData);
+    } else {
+      await supabase
+        .from("resources")
+        .update({
+          section: editForm.section,
+          name: editForm.name,
+          url: editForm.url,
+          description: editForm.description,
+        })
+        .eq("id", editForm.id);
+    }
     setSaving(false);
     setEditingId(null);
     router.refresh();
@@ -299,13 +312,11 @@ export function ResourcesContent({ initialResources }: ResourcesContentProps) {
                       </p>
                     </a>
                   )}
-                  {isAdmin &&
-                    !link.id.startsWith("default-") &&
-                    editingId !== link.id && (
-                      <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                        <EditButton onClick={() => startEdit(link)} />
-                      </div>
-                    )}
+                  {isAdmin && editingId !== link.id && (
+                    <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                      <EditButton onClick={() => startEdit(link)} />
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

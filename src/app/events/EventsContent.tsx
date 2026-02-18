@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { EditButton } from "@/components/EditButton";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
-import type { Event } from "@/lib/database.types";
+import type { Event, EventInsert } from "@/lib/database.types";
 
 interface EventsContentProps {
   initialEvents: Event[];
@@ -98,18 +98,33 @@ export function EventsContent({ initialEvents }: EventsContentProps) {
   async function saveEvent() {
     if (!editForm.id) return;
     setSaving(true);
-    await supabase
-      .from("events")
-      .update({
-        title: editForm.title,
-        event_date: editForm.event_date,
-        event_time: editForm.event_time,
-        location: editForm.location,
-        description: editForm.description,
-        open_to_all: editForm.open_to_all,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", editForm.id);
+
+    // If editing a default item, insert it as a new entry
+    if (editForm.id.startsWith("default-")) {
+      const insertData: EventInsert = {
+        title: editForm.title!,
+        event_date: editForm.event_date!,
+        event_time: editForm.event_time || null,
+        location: editForm.location || null,
+        description: editForm.description || null,
+        open_to_all: editForm.open_to_all ?? true,
+        sort_order: editForm.sort_order ?? 0,
+      };
+      await supabase.from("events").insert(insertData);
+    } else {
+      await supabase
+        .from("events")
+        .update({
+          title: editForm.title,
+          event_date: editForm.event_date,
+          event_time: editForm.event_time,
+          location: editForm.location,
+          description: editForm.description,
+          open_to_all: editForm.open_to_all,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", editForm.id);
+    }
     setSaving(false);
     setEditingId(null);
     router.refresh();
@@ -282,7 +297,7 @@ export function EventsContent({ initialEvents }: EventsContentProps) {
                 <p className="font-body text-base text-rvno-ink-muted leading-relaxed">
                   {event.description}
                 </p>
-                {isAdmin && !event.id.startsWith("default-") && (
+                {isAdmin && (
                   <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <EditButton onClick={() => startEdit(event)} />
                   </div>
