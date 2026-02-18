@@ -19,16 +19,69 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Member>>({});
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newMember, setNewMember] = useState<Partial<Member>>({
     name: "",
     title: "",
     bio: "",
     bikes: "",
+    photo_url: "",
     city: "",
     state: "",
     country: "",
   });
+
+  async function uploadPhoto(
+    file: File,
+    memberId?: string
+  ): Promise<string | null> {
+    setUploading(true);
+    const ext = file.name.split(".").pop();
+    const fileName = `${memberId || "new"}-${Date.now()}.${ext}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("member-photos")
+      .upload(fileName, file);
+
+    if (uploadError) {
+      console.error("Upload error:", uploadError);
+      setUploading(false);
+      return null;
+    }
+
+    const { data: urlData } = supabase.storage
+      .from("member-photos")
+      .getPublicUrl(fileName);
+
+    setUploading(false);
+    return urlData.publicUrl;
+  }
+
+  async function handleEditPhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !editForm.id) return;
+
+    const url = await uploadPhoto(file, editForm.id);
+    if (url) {
+      setEditForm({ ...editForm, photo_url: url });
+      // Save immediately so photo persists
+      await supabase
+        .from("members")
+        .update({ photo_url: url })
+        .eq("id", editForm.id);
+    }
+  }
+
+  async function handleNewPhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const url = await uploadPhoto(file);
+    if (url) {
+      setNewMember({ ...newMember, photo_url: url });
+    }
+  }
 
   function startEdit(member: Member) {
     setEditingId(member.id);
@@ -92,6 +145,7 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
       title: newMember.title || null,
       bio: newMember.bio || null,
       bikes: newMember.bikes || null,
+      photo_url: newMember.photo_url || null,
       city: newMember.city || null,
       state: newMember.state || null,
       country: newMember.country || null,
@@ -106,6 +160,7 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
       title: "",
       bio: "",
       bikes: "",
+      photo_url: "",
       city: "",
       state: "",
       country: "",
@@ -150,6 +205,36 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
               {editingId === member.id ? (
                 <div className="bg-rvno-card rounded-lg border-2 border-[#C4853A]/30 p-5 ring-1 ring-[#C4853A]/30">
                   <div className="space-y-3">
+                    {/* Photo upload */}
+                    <div className="flex items-center gap-4 mb-2">
+                      <label className="cursor-pointer group">
+                        <div className="w-20 h-20 rounded-full bg-rvno-surface flex items-center justify-center overflow-hidden border-2 border-dashed border-rvno-border group-hover:border-[#C4853A]/50 transition-colors">
+                          {uploading ? (
+                            <span className="font-mono text-xs text-rvno-ink-dim">...</span>
+                          ) : editForm.photo_url ? (
+                            <img
+                              src={editForm.photo_url}
+                              alt=""
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <span className="font-mono text-xs text-rvno-ink-dim text-center px-1">
+                              + Photo
+                            </span>
+                          )}
+                        </div>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleEditPhotoChange}
+                          className="hidden"
+                          disabled={uploading}
+                        />
+                      </label>
+                      <p className="font-body text-xs text-rvno-ink-dim">
+                        Click to upload a photo
+                      </p>
+                    </div>
                     <input
                       type="text"
                       value={editForm.name || ""}
@@ -310,6 +395,36 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
               <h3 className="font-display text-lg font-semibold text-rvno-ink mb-4">
                 New Member
               </h3>
+              {/* Photo upload */}
+              <div className="flex items-center gap-4 mb-4">
+                <label className="cursor-pointer group">
+                  <div className="w-20 h-20 rounded-full bg-rvno-surface flex items-center justify-center overflow-hidden border-2 border-dashed border-rvno-border group-hover:border-[#C4853A]/50 transition-colors">
+                    {uploading ? (
+                      <span className="font-mono text-xs text-rvno-ink-dim">...</span>
+                    ) : newMember.photo_url ? (
+                      <img
+                        src={newMember.photo_url}
+                        alt=""
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="font-mono text-xs text-rvno-ink-dim text-center px-1">
+                        + Photo
+                      </span>
+                    )}
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleNewPhotoChange}
+                    className="hidden"
+                    disabled={uploading}
+                  />
+                </label>
+                <p className="font-body text-xs text-rvno-ink-dim">
+                  Click to upload a photo (optional)
+                </p>
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-3">
                   <input
