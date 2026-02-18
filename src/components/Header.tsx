@@ -5,9 +5,9 @@ import { usePathname } from "next/navigation";
 
 const NAV_ITEMS = [
   { href: "/", label: "Home" },
-  { href: "/photos", label: "Photos" },
   { href: "/about", label: "About" },
   { href: "/members", label: "The Crew" },
+  { href: "/photos", label: "Photos" },
   { href: "/events", label: "Events" },
   { href: "/resources", label: "Norton Stuff" },
   { href: "/contact", label: "Contact" },
@@ -20,9 +20,11 @@ export function Header() {
     <header className="sticky top-0 z-50 border-b border-rvno-border bg-rvno-bg/95 backdrop-blur-sm">
       <div className="max-w-5xl mx-auto px-5 py-4 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-3 no-underline">
-          <span className="font-display text-xl font-bold text-rvno-ink tracking-tight">
-            RVNO
-          </span>
+          <img
+            src="/RVNO.png"
+            alt="Roanoke Valley Norton Owners"
+            className="h-10 w-auto"
+          />
           <span className="font-mono text-xs text-rvno-copper tracking-widest uppercase">
             Est. 1988
           </span>
