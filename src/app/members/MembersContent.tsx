@@ -6,6 +6,7 @@ import { EditButton } from "@/components/EditButton";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import type { Member } from "@/lib/database.types";
+import { geocodeLocation } from "@/lib/geocode";
 
 interface MembersContentProps {
   initialMembers: Member[];
@@ -42,6 +43,14 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
   async function saveMember() {
     if (!editForm.id) return;
     setSaving(true);
+
+    // Geocode the location
+    const coords = await geocodeLocation(
+      editForm.city,
+      editForm.state,
+      editForm.country
+    );
+
     await supabase
       .from("members")
       .update({
@@ -52,6 +61,8 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
         city: editForm.city || null,
         state: editForm.state || null,
         country: editForm.country || null,
+        location_lat: coords?.lat ?? null,
+        location_lng: coords?.lng ?? null,
       })
       .eq("id", editForm.id);
     setSaving(false);
@@ -68,6 +79,14 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
   async function addMember() {
     if (!newMember.name) return;
     setSaving(true);
+
+    // Geocode the location
+    const coords = await geocodeLocation(
+      newMember.city,
+      newMember.state,
+      newMember.country
+    );
+
     await supabase.from("members").insert({
       name: newMember.name,
       title: newMember.title || null,
@@ -76,6 +95,8 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
       city: newMember.city || null,
       state: newMember.state || null,
       country: newMember.country || null,
+      location_lat: coords?.lat ?? null,
+      location_lng: coords?.lng ?? null,
       sort_order: initialMembers.length,
     });
     setSaving(false);

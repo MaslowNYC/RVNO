@@ -1,57 +1,37 @@
-import { supabase } from "@/lib/supabase";
-import { HomeContent } from "./HomeContent";
+import Image from "next/image";
 
-export const revalidate = 60; // Revalidate every 60 seconds
+export default function Home() {
+  return (
+    <div className="min-h-[calc(100vh-80px)] flex flex-col">
+      {/* Hero logo - 15% larger than header */}
+      <div className="flex justify-center pt-12 pb-8">
+        <img
+          src="/RVNO.png"
+          alt="Roanoke Valley Norton Owners"
+          className="w-[60%] max-w-lg h-auto"
+        />
+      </div>
 
-async function getAlbums() {
-  const { data: albums } = await supabase
-    .from("albums")
-    .select("*")
-    .order("event_date", { ascending: true });
+      {/* Hero image - cinematic full width */}
+      <div className="relative w-full flex-1 min-h-[60vh]">
+        <Image
+          src="/mark_bike.jpeg"
+          alt="Norton motorcycle on the Blue Ridge Parkway"
+          fill
+          priority
+          className="object-cover"
+          sizes="100vw"
+        />
+        {/* Subtle gradient overlay at top for blending */}
+        <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-rvno-bg to-transparent" />
+      </div>
 
-  if (!albums) return [];
-
-  // Get photo counts per album
-  const { data: photoCounts } = await supabase
-    .from("photos")
-    .select("album_id");
-
-  const countMap: Record<string, number> = {};
-  photoCounts?.forEach((p) => {
-    countMap[p.album_id] = (countMap[p.album_id] || 0) + 1;
-  });
-
-  return albums.map((a) => ({
-    ...a,
-    photo_count: countMap[a.id] || 0,
-  }));
-}
-
-async function getPhotosWithLocation() {
-  const { data: photos } = await supabase
-    .from("photos")
-    .select("*, location_lat, location_lng")
-    .not("location_lat", "is", null)
-    .not("location_lng", "is", null);
-
-  return photos || [];
-}
-
-async function getMembers() {
-  const { data: members } = await supabase
-    .from("members")
-    .select("*")
-    .order("name", { ascending: true });
-
-  return members || [];
-}
-
-export default async function Home() {
-  const [albums, photos, members] = await Promise.all([
-    getAlbums(),
-    getPhotosWithLocation(),
-    getMembers(),
-  ]);
-
-  return <HomeContent albums={albums} photos={photos} members={members} />;
+      {/* Subtle tagline */}
+      <div className="text-center py-6 bg-rvno-bg">
+        <p className="font-mono text-xs text-rvno-ink-dim tracking-[0.3em] uppercase">
+          Virginia&apos;s Roanoke Valley &middot; Since 1988
+        </p>
+      </div>
+    </div>
+  );
 }

@@ -8,28 +8,19 @@ import type { Album, Photo, Member } from "@/lib/database.types";
 
 type AlbumWithCount = Album & { photo_count: number };
 
-interface HomeContentProps {
+interface PhotosContentProps {
   albums: AlbumWithCount[];
   photos: Photo[];
   members: Member[];
 }
 
-export function HomeContent({ albums, photos, members }: HomeContentProps) {
+export function PhotosContent({ albums, photos, members }: PhotosContentProps) {
   const [view, setView] = useState<"road" | "map" | "crew">("crew");
 
   return (
     <div className="pb-10">
-      {/* Hero logo */}
-      <div className="flex justify-center pt-8 pb-6">
-        <img
-          src="/RVNO.png"
-          alt="Roanoke Valley Norton Owners"
-          className="w-1/2 max-w-md h-auto"
-        />
-      </div>
-
       {/* View toggle - metal file cabinet tabs */}
-      <div className="flex justify-center pb-6 gap-1">
+      <div className="flex justify-center pt-8 pb-6 gap-1">
         {[
           { key: "crew" as const, label: "The Crew" },
           { key: "road" as const, label: "The Road" },
