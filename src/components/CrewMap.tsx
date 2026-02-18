@@ -1,14 +1,56 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import type { Member } from "@/lib/database.types";
+import { useEffect, useRef, useState, useCallback } from "react";
+import type { Member, MemberType } from "@/lib/database.types";
+import { useAuth } from "@/lib/AuthContext";
+import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 
 let L: typeof import("leaflet") | null = null;
 
 export function CrewMap({ members }: { members: Member[] }) {
+  const { isAdmin } = useAuth();
+  const router = useRouter();
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<any>(null);
   const [ready, setReady] = useState(false);
+
+  // Editing state
+  const [editingMember, setEditingMember] = useState<Member | null>(null);
+  const [editForm, setEditForm] = useState({ name: "", title: "" });
+  const [saving, setSaving] = useState(false);
+
+  const saveMemberDetails = useCallback(async () => {
+    if (!editingMember) return;
+    setSaving(true);
+    await supabase
+      .from("members")
+      .update({ name: editForm.name, title: editForm.title || null })
+      .eq("id", editingMember.id);
+    setSaving(false);
+    setEditingMember(null);
+    router.refresh();
+  }, [editingMember, editForm, router]);
+
+  // Global click handler for edit buttons in popups
+  useEffect(() => {
+    if (!isAdmin) return;
+
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.classList.contains("edit-member-btn")) {
+        const memberId = target.dataset.memberId;
+        const member = members.find((m) => m.id === memberId);
+        if (member) {
+          setEditingMember(member);
+          setEditForm({ name: member.name, title: member.title || "" });
+        }
+      }
+    };
+
+    document.addEventListener("click", handleClick);
+    return () => document.removeEventListener("click", handleClick);
+  }, [isAdmin, members]);
 
   const mappableMembers = members.filter(
     (m) => m.location_lat && m.location_lng
@@ -140,6 +182,26 @@ export function CrewMap({ members }: { members: Member[] }) {
                 </div>`
               : ""
           }
+          ${
+            isAdmin
+              ? `<button
+                  class="edit-member-btn"
+                  data-member-id="${member.id}"
+                  style="
+                    margin-top: 8px;
+                    padding: 4px 8px;
+                    background: transparent;
+                    border: 1px solid #C4853A;
+                    border-radius: 4px;
+                    color: #C4853A;
+                    font-size: 10px;
+                    font-family: 'Atkinson Hyperlegible', system-ui, sans-serif;
+                    cursor: pointer;
+                    width: 100%;
+                  "
+                >Edit name & title</button>`
+              : ""
+          }
         </div>
       `;
 
@@ -243,6 +305,49 @@ export function CrewMap({ members }: { members: Member[] }) {
           </span>
         </div>
       </div>
+
+      {/* Edit member modal */}
+      {editingMember && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
+          <div className="bg-rvno-card rounded-lg border border-rvno-border shadow-xl p-5 w-80 max-w-[90vw]">
+            <h3 className="font-display text-lg font-semibold text-rvno-ink mb-4">
+              Edit Member
+            </h3>
+            <div className="space-y-3">
+              <input
+                type="text"
+                value={editForm.name}
+                onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                placeholder="Name"
+                className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-3 py-2 font-body text-sm text-rvno-ink focus:outline-none focus:border-[#C4853A]/50"
+              />
+              <input
+                type="text"
+                value={editForm.title}
+                onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                placeholder="Title (optional)"
+                className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-3 py-2 font-body text-sm text-rvno-ink focus:outline-none focus:border-[#C4853A]/50"
+              />
+            </div>
+            <div className="flex justify-end gap-3 mt-4">
+              <button
+                onClick={() => setEditingMember(null)}
+                disabled={saving}
+                className="font-body text-sm text-rvno-ink-dim hover:text-rvno-ink transition-colors px-3 py-2 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={saveMemberDetails}
+                disabled={saving || !editForm.name}
+                className="bg-[#C4853A] hover:bg-[#B37832] text-white font-body text-sm font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+              >
+                {saving ? "Saving..." : "Save"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

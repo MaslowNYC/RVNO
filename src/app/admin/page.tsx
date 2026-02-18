@@ -2,16 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import type { Album, Member, Photo, MemberType } from "@/lib/database.types";
+import type { Album, Photo } from "@/lib/database.types";
+import Link from "next/link";
 
 export default function AdminPage() {
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"albums" | "members">("albums");
   const [albums, setAlbums] = useState<Album[]>([]);
-  const [members, setMembers] = useState<Member[]>([]);
   const [showNewAlbum, setShowNewAlbum] = useState(false);
-  const [showNewMember, setShowNewMember] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [authError, setAuthError] = useState("");
@@ -32,7 +30,6 @@ export default function AdminPage() {
   useEffect(() => {
     if (session) {
       loadAlbums();
-      loadMembers();
     }
   }, [session]);
 
@@ -42,14 +39,6 @@ export default function AdminPage() {
       .select("*")
       .order("event_date", { ascending: false });
     if (data) setAlbums(data);
-  }
-
-  async function loadMembers() {
-    const { data } = await supabase
-      .from("members")
-      .select("*")
-      .order("sort_order", { ascending: true });
-    if (data) setMembers(data);
   }
 
   async function handleLogin(e: React.FormEvent) {
@@ -119,109 +108,66 @@ export default function AdminPage() {
         <h1 className="font-display text-2xl font-bold text-rvno-ink">
           RVNO Admin
         </h1>
-        <button
-          onClick={handleLogout}
-          className="font-body text-sm text-rvno-ink-dim hover:text-rvno-teal tracking-wide"
-        >
-          Sign Out
-        </button>
+        <div className="flex items-center gap-4">
+          <Link
+            href="/"
+            className="font-body text-sm text-rvno-teal hover:text-rvno-teal-dark tracking-wide"
+          >
+            Go to site →
+          </Link>
+          <button
+            onClick={handleLogout}
+            className="font-body text-sm text-rvno-ink-dim hover:text-rvno-ink tracking-wide"
+          >
+            Sign Out
+          </button>
+        </div>
       </div>
 
-      {/* Admin tabs */}
-      <div className="flex gap-1 mb-6">
-        {[
-          { key: "albums" as const, label: "Albums" },
-          { key: "members" as const, label: "Members" },
-        ].map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={`px-4 py-1.5 rounded font-mono text-xs tracking-wide transition-all border ${
-              tab === t.key
-                ? "bg-rvno-teal-dark text-rvno-white border-rvno-teal"
-                : "bg-transparent text-rvno-ink-dim border-transparent hover:text-rvno-ink-muted"
-            }`}
-          >
-            {t.label}
-          </button>
+      <div className="bg-rvno-card rounded-lg border border-rvno-border p-4 mb-6">
+        <p className="font-body text-sm text-rvno-ink-muted">
+          <span className="text-[#C4853A] font-semibold">Tip:</span> You can now edit members, events, resources, and page content directly on the site.
+          Just go to any page and look for the edit buttons in the bottom-right corner of each section.
+        </p>
+      </div>
+
+      <h2 className="font-display text-lg font-semibold text-rvno-ink mb-4">
+        Album Management
+      </h2>
+      <p className="font-body text-sm text-rvno-ink-muted mb-4">
+        Create albums and upload photos here. Photos require the file upload interface.
+      </p>
+
+      <button
+        onClick={() => setShowNewAlbum(!showNewAlbum)}
+        className="mb-6 bg-rvno-teal text-white font-body text-base font-semibold px-6 py-3 rounded-lg min-h-[48px] hover:bg-rvno-teal transition-colors"
+      >
+        + New Album
+      </button>
+
+      {showNewAlbum && (
+        <NewAlbumForm
+          onCreated={() => {
+            setShowNewAlbum(false);
+            loadAlbums();
+          }}
+        />
+      )}
+
+      <div className="space-y-3">
+        {albums.map((album) => (
+          <AlbumRow key={album.id} album={album} onUpdate={loadAlbums} />
         ))}
       </div>
 
-      {/* Albums Tab */}
-      {tab === "albums" && (
-        <>
-          <button
-            onClick={() => setShowNewAlbum(!showNewAlbum)}
-            className="mb-6 bg-rvno-teal text-white font-body text-base font-semibold px-6 py-3 rounded-lg min-h-[48px] hover:bg-rvno-teal transition-colors"
-          >
-            + New Album
-          </button>
-
-          {showNewAlbum && (
-            <NewAlbumForm
-              onCreated={() => {
-                setShowNewAlbum(false);
-                loadAlbums();
-              }}
-            />
-          )}
-
-          <div className="space-y-3">
-            {albums.map((album) => (
-              <AlbumRow key={album.id} album={album} onUpdate={loadAlbums} />
-            ))}
-          </div>
-
-          {albums.length === 0 && (
-            <p className="text-center font-mono text-sm text-rvno-ink-dim py-10">
-              No albums yet. Create your first one above.
-            </p>
-          )}
-        </>
-      )}
-
-      {/* Members Tab */}
-      {tab === "members" && (
-        <>
-          <button
-            onClick={() => setShowNewMember(!showNewMember)}
-            className="mb-6 bg-rvno-teal text-white font-body text-base font-semibold px-6 py-3 rounded-lg min-h-[48px] hover:bg-rvno-teal transition-colors"
-          >
-            + New Member
-          </button>
-
-          {showNewMember && (
-            <NewMemberForm
-              onCreated={() => {
-                setShowNewMember(false);
-                loadMembers();
-              }}
-              memberCount={members.length}
-            />
-          )}
-
-          <div className="space-y-3">
-            {members.map((member) => (
-              <MemberRow
-                key={member.id}
-                member={member}
-                onUpdate={loadMembers}
-              />
-            ))}
-          </div>
-
-          {members.length === 0 && (
-            <p className="text-center font-mono text-sm text-rvno-ink-dim py-10">
-              No members yet. Add your first one above.
-            </p>
-          )}
-        </>
+      {albums.length === 0 && (
+        <p className="text-center font-mono text-sm text-rvno-ink-dim py-10">
+          No albums yet. Create your first one above.
+        </p>
       )}
     </div>
   );
 }
-
-// ===================== ALBUM COMPONENTS =====================
 
 function NewAlbumForm({ onCreated }: { onCreated: () => void }) {
   const [title, setTitle] = useState("");
@@ -353,14 +299,12 @@ function AlbumRow({
       let takenAt: string | null = null;
 
       if (data) {
-        // Get GPS
         const gps = await exifr.gps(file);
         if (gps && gps.latitude && gps.longitude) {
           lat = gps.latitude;
           lng = gps.longitude;
         }
 
-        // Get date taken
         if (data.DateTimeOriginal) {
           takenAt = new Date(data.DateTimeOriginal).toISOString();
         }
@@ -384,10 +328,8 @@ function AlbumRow({
       const ext = file.name.split(".").pop();
       const fileName = `${album.id}/${Date.now()}-${i}.${ext}`;
 
-      // Extract GPS and date from each photo
       const { lat, lng, takenAt } = await extractGPSAndDate(file);
 
-      // Track first GPS for album fallback
       if (i === 0 && lat && lng) {
         firstGPS = { lat, lng };
       }
@@ -405,7 +347,6 @@ function AlbumRow({
         .from("album-photos")
         .getPublicUrl(fileName);
 
-      // Insert photo with individual GPS coordinates
       await supabase.from("photos").insert({
         album_id: album.id,
         url: urlData.publicUrl,
@@ -416,7 +357,6 @@ function AlbumRow({
         taken_at: takenAt,
       });
 
-      // Set first photo as cover if none exists
       if (!album.cover_photo_url && i === 0) {
         await supabase
           .from("albums")
@@ -425,7 +365,6 @@ function AlbumRow({
       }
     }
 
-    // Auto-fill album GPS from first photo if album has no coordinates
     if (firstGPS && !album.location_lat) {
       await supabase
         .from("albums")
@@ -559,7 +498,6 @@ function AlbumRow({
             </p>
           )}
 
-          {/* Photo Edit Modal */}
           {editingPhoto && (
             <PhotoEditModal
               photo={editingPhoto}
@@ -713,256 +651,6 @@ function PhotoEditModal({
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-// ===================== MEMBER COMPONENTS =====================
-
-function NewMemberForm({
-  onCreated,
-  memberCount,
-}: {
-  onCreated: () => void;
-  memberCount: number;
-}) {
-  const [name, setName] = useState("");
-  const [title, setTitle] = useState("");
-  const [bio, setBio] = useState("");
-  const [bikes, setBikes] = useState("");
-  const [city, setCity] = useState("");
-  const [state, setState] = useState("");
-  const [country, setCountry] = useState("US");
-  const [lat, setLat] = useState("");
-  const [lng, setLng] = useState("");
-  const [memberType, setMemberType] = useState<MemberType>("member");
-  const [saving, setSaving] = useState(false);
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!name) return;
-    setSaving(true);
-
-    const locationParts = [city, state, country].filter(Boolean).join(", ");
-
-    await supabase.from("members").insert({
-      name,
-      title: title || null,
-      bio: bio || null,
-      bikes: bikes || null,
-      city: city || null,
-      state: state || null,
-      country: country || null,
-      location_name: locationParts || null,
-      location_lat: lat ? parseFloat(lat) : null,
-      location_lng: lng ? parseFloat(lng) : null,
-      sort_order: memberCount + 1,
-      member_type: memberType,
-    });
-
-    setSaving(false);
-    onCreated();
-  }
-
-  return (
-    <form
-      onSubmit={handleSubmit}
-      className="bg-rvno-card rounded-lg border border-rvno-border p-5 mb-6 space-y-3"
-    >
-      <div className="grid grid-cols-2 gap-3">
-        <input
-          type="text"
-          placeholder="Full name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="bg-rvno-elevated border-2 border-rvno-border rounded-lg px-4 py-3 font-body text-base text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
-          required
-        />
-        <input
-          type="text"
-          placeholder="Title (e.g., Founder, Parliamentarian)"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="bg-rvno-elevated border-2 border-rvno-border rounded-lg px-4 py-3 font-body text-base text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
-        />
-      </div>
-
-      {/* Member Type Toggle */}
-      <div className="flex gap-2">
-        {(["member", "friend"] as const).map((type) => (
-          <button
-            key={type}
-            type="button"
-            onClick={() => setMemberType(type)}
-            className={`px-3 py-1.5 rounded font-mono text-xs tracking-wide transition-all border ${
-              memberType === type
-                ? type === "member"
-                  ? "bg-rvno-teal-dark text-rvno-white border-rvno-teal"
-                  : "bg-rvno-dot/80 text-rvno-white border-rvno-dot"
-                : "bg-transparent text-rvno-ink-dim border-rvno-border hover:text-rvno-ink-muted"
-            }`}
-          >
-            {type === "member" ? "Member" : "Friend of RVNO"}
-          </button>
-        ))}
-      </div>
-
-      <input
-        type="text"
-        placeholder="Bikes (e.g., 1973 Norton 750 Commando)"
-        value={bikes}
-        onChange={(e) => setBikes(e.target.value)}
-        className="w-full bg-rvno-elevated border-2 border-rvno-border rounded-lg px-4 py-3 font-body text-base text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
-      />
-      <textarea
-        placeholder="Short bio (optional)"
-        value={bio}
-        onChange={(e) => setBio(e.target.value)}
-        rows={2}
-        className="w-full bg-rvno-elevated border-2 border-rvno-border rounded-lg px-4 py-3 font-body text-base text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40 resize-none"
-      />
-      <div className="grid grid-cols-3 gap-3">
-        <input
-          type="text"
-          placeholder="City"
-          value={city}
-          onChange={(e) => setCity(e.target.value)}
-          className="bg-rvno-elevated border-2 border-rvno-border rounded-lg px-4 py-3 font-body text-base text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
-        />
-        <input
-          type="text"
-          placeholder="State"
-          value={state}
-          onChange={(e) => setState(e.target.value)}
-          className="bg-rvno-elevated border-2 border-rvno-border rounded-lg px-4 py-3 font-body text-base text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
-        />
-        <input
-          type="text"
-          placeholder="Country"
-          value={country}
-          onChange={(e) => setCountry(e.target.value)}
-          className="bg-rvno-elevated border-2 border-rvno-border rounded-lg px-4 py-3 font-body text-base text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
-        />
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <input
-          type="text"
-          placeholder="Latitude (e.g., 37.27)"
-          value={lat}
-          onChange={(e) => setLat(e.target.value)}
-          className="bg-rvno-elevated border-2 border-rvno-border rounded-lg px-4 py-3 font-body text-base text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
-        />
-        <input
-          type="text"
-          placeholder="Longitude (e.g., -79.94)"
-          value={lng}
-          onChange={(e) => setLng(e.target.value)}
-          className="bg-rvno-elevated border-2 border-rvno-border rounded-lg px-4 py-3 font-body text-base text-rvno-ink placeholder:text-rvno-ink-dim focus:outline-none focus:border-rvno-teal/40"
-        />
-      </div>
-      <button
-        type="submit"
-        disabled={saving}
-        className="bg-rvno-teal text-white font-body text-base font-semibold px-6 py-3 rounded-lg min-h-[48px] hover:bg-rvno-teal transition-colors disabled:opacity-50"
-      >
-        {saving ? "Adding..." : "Add Member"}
-      </button>
-    </form>
-  );
-}
-
-function MemberRow({
-  member,
-  onUpdate,
-}: {
-  member: Member;
-  onUpdate: () => void;
-}) {
-  const [editing, setEditing] = useState(false);
-  const [memberType, setMemberType] = useState<MemberType>(member.member_type);
-
-  async function deleteMember() {
-    if (!confirm(`Remove ${member.name}?`)) return;
-    await supabase.from("members").delete().eq("id", member.id);
-    onUpdate();
-  }
-
-  async function updateType(newType: MemberType) {
-    setMemberType(newType);
-    await supabase
-      .from("members")
-      .update({ member_type: newType })
-      .eq("id", member.id);
-    onUpdate();
-  }
-
-  return (
-    <div className="bg-rvno-card rounded-lg border border-rvno-border p-4">
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <h3 className="font-display text-sm font-semibold text-rvno-ink">
-              {member.name}
-            </h3>
-            <span
-              className={`font-mono text-[8px] px-1.5 py-0.5 rounded tracking-wide ${
-                member.member_type === "member"
-                  ? "bg-rvno-teal/20 text-rvno-teal"
-                  : "bg-rvno-dot/20 text-rvno-dot"
-              }`}
-            >
-              {member.member_type === "member" ? "MEMBER" : "FRIEND"}
-            </span>
-          </div>
-          <p className="font-body text-sm text-rvno-teal tracking-wide mt-0.5">
-            {[member.title, member.location_name].filter(Boolean).join(" · ")}
-          </p>
-          {member.bikes && (
-            <p className="font-body text-sm text-rvno-ink-dim mt-0.5">
-              🏍️ {member.bikes}
-            </p>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setEditing(!editing)}
-            className="font-body text-sm text-rvno-ink-dim hover:text-rvno-teal tracking-wide"
-          >
-            Edit
-          </button>
-          <button
-            onClick={deleteMember}
-            className="font-body text-sm text-rvno-ink-dim hover:text-rvno-dot tracking-wide"
-          >
-            Delete
-          </button>
-        </div>
-      </div>
-
-      {editing && (
-        <div className="mt-3 pt-3 border-t border-rvno-border">
-          <label className="font-body text-sm text-rvno-ink-dim uppercase tracking-wide block mb-2">
-            Member Type
-          </label>
-          <div className="flex gap-2">
-            {(["member", "friend"] as const).map((type) => (
-              <button
-                key={type}
-                onClick={() => updateType(type)}
-                className={`px-3 py-1.5 rounded font-mono text-xs tracking-wide transition-all border ${
-                  memberType === type
-                    ? type === "member"
-                      ? "bg-rvno-teal-dark text-rvno-white border-rvno-teal"
-                      : "bg-rvno-dot/80 text-rvno-white border-rvno-dot"
-                    : "bg-transparent text-rvno-ink-dim border-rvno-border hover:text-rvno-ink-muted"
-                }`}
-              >
-                {type === "member" ? "Member" : "Friend of RVNO"}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

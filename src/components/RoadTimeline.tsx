@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import type { Album } from "@/lib/database.types";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/lib/AuthContext";
+import { useRouter } from "next/navigation";
 
 // Colors matching dark workshop Tailwind config
 const C = {
@@ -100,18 +102,24 @@ type TimelineAlbum = Album & { photo_count?: number };
 
 interface RoadTimelineProps {
   albums: TimelineAlbum[];
-  isAdmin?: boolean;
 }
 
 // Track offsets per album for draggable dots
 type OffsetMap = Record<string, { x: number; y: number }>;
 
-export function RoadTimeline({ albums, isAdmin = false }: RoadTimelineProps) {
+export function RoadTimeline({ albums }: RoadTimelineProps) {
+  const { isAdmin } = useAuth();
+  const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const [hoveredAlbum, setHoveredAlbum] = useState<TimelineAlbum | null>(null);
   const [hoverPos, setHoverPos] = useState({ x: 0, y: 0 });
   const [hoverSide, setHoverSide] = useState<"left" | "right">("right");
   const [width, setWidth] = useState(700);
+
+  // Editing state
+  const [editingAlbum, setEditingAlbum] = useState<TimelineAlbum | null>(null);
+  const [editForm, setEditForm] = useState({ title: "", description: "" });
+  const [saving, setSaving] = useState(false);
 
   // Admin drag state
   const [offsets, setOffsets] = useState<OffsetMap>({});
@@ -147,6 +155,30 @@ export function RoadTimeline({ albums, isAdmin = false }: RoadTimelineProps) {
       .from("albums")
       .update({ offset_x: offsetX, offset_y: offsetY })
       .eq("id", albumId);
+  }, []);
+
+  // Save album title/description
+  const saveAlbumDetails = useCallback(async () => {
+    if (!editingAlbum) return;
+    setSaving(true);
+    await supabase
+      .from("albums")
+      .update({ title: editForm.title, description: editForm.description || null })
+      .eq("id", editingAlbum.id);
+    setSaving(false);
+    setEditingAlbum(null);
+    router.refresh();
+  }, [editingAlbum, editForm, router]);
+
+  const startEditAlbum = useCallback((album: TimelineAlbum) => {
+    setEditingAlbum(album);
+    setEditForm({ title: album.title, description: album.description || "" });
+    setHoveredAlbum(null);
+  }, []);
+
+  const cancelEditAlbum = useCallback(() => {
+    setEditingAlbum(null);
+    setEditForm({ title: "", description: "" });
   }, []);
 
   // Drag handlers
@@ -491,9 +523,9 @@ export function RoadTimeline({ albums, isAdmin = false }: RoadTimelineProps) {
       </svg>
 
       {/* Hover popup */}
-      {hoveredAlbum && (
+      {hoveredAlbum && !editingAlbum && (
         <div
-          className="absolute pointer-events-none z-50"
+          className={`absolute z-50 ${isAdmin ? "pointer-events-auto" : "pointer-events-none"}`}
           style={{
             left: hoverPos.x + (hoverSide === "left" ? -256 : 16),
             top: hoverPos.y - 50,
@@ -536,6 +568,57 @@ export function RoadTimeline({ albums, isAdmin = false }: RoadTimelineProps) {
                   {hoveredAlbum.description}
                 </p>
               )}
+              {isAdmin && (
+                <button
+                  onClick={() => startEditAlbum(hoveredAlbum)}
+                  className="mt-2 w-full text-center font-body text-xs text-[#C4853A] hover:text-[#D4954A] transition-colors"
+                >
+                  Edit title & description
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit album modal */}
+      {editingAlbum && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-rvno-card rounded-lg border border-rvno-border shadow-xl p-5 w-80 max-w-[90vw]">
+            <h3 className="font-display text-lg font-semibold text-rvno-ink mb-4">
+              Edit Album
+            </h3>
+            <div className="space-y-3">
+              <input
+                type="text"
+                value={editForm.title}
+                onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                placeholder="Album title"
+                className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-3 py-2 font-body text-sm text-rvno-ink focus:outline-none focus:border-[#C4853A]/50"
+              />
+              <textarea
+                value={editForm.description}
+                onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                placeholder="Description (optional)"
+                rows={3}
+                className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-3 py-2 font-body text-sm text-rvno-ink focus:outline-none focus:border-[#C4853A]/50 resize-none"
+              />
+            </div>
+            <div className="flex justify-end gap-3 mt-4">
+              <button
+                onClick={cancelEditAlbum}
+                disabled={saving}
+                className="font-body text-sm text-rvno-ink-dim hover:text-rvno-ink transition-colors px-3 py-2 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={saveAlbumDetails}
+                disabled={saving || !editForm.title}
+                className="bg-[#C4853A] hover:bg-[#B37832] text-white font-body text-sm font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+              >
+                {saving ? "Saving..." : "Save"}
+              </button>
             </div>
           </div>
         </div>

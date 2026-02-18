@@ -1,68 +1,20 @@
-export default function ContactPage() {
-  const mailtoLink = `mailto:finklerrah@gmail.com?cc=iampatrickmay@gmail.com&subject=${encodeURIComponent("RVNO Website Inquiry")}`;
+import { supabase } from "@/lib/supabase";
+import { ContactContent } from "./ContactContent";
 
-  return (
-    <div className="max-w-2xl mx-auto px-5 py-12">
-      <header className="mb-10">
-        <h1 className="font-display text-3xl font-bold text-rvno-ink mb-2">
-          Get in Touch
-        </h1>
-        <p className="font-body text-base text-rvno-ink-muted italic">
-          Want to join us? Got a Norton collecting dust? Know a good joke? Drop
-          us a line.
-        </p>
-      </header>
+export const revalidate = 60;
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Contact action */}
-        <div className="space-y-5">
-          <div>
-            <h3 className="font-mono text-sm text-rvno-teal tracking-wide uppercase mb-3 font-semibold">
-              Reach Out
-            </h3>
-            <a
-              href={mailtoLink}
-              className="inline-flex items-center gap-2 bg-rvno-teal text-white font-body text-base font-semibold px-6 py-3 rounded-lg hover:bg-rvno-teal-dark transition-colors min-h-[48px]"
-            >
-              <span>Email Mark</span>
-              <span className="text-sm opacity-80">→</span>
-            </a>
-            <p className="font-body text-sm text-rvno-ink-dim mt-2">
-              Opens your email app with subject pre-filled
-            </p>
-          </div>
+async function getPageContent() {
+  const { data } = await supabase
+    .from("page_content")
+    .select("*")
+    .eq("page_key", "contact_joining")
+    .single();
 
-          <div>
-            <h3 className="font-mono text-sm text-rvno-teal tracking-wide uppercase mb-2 font-semibold">
-              Location
-            </h3>
-            <p className="font-body text-base text-rvno-ink-muted">
-              Roanoke Valley, Virginia
-              <br />
-              Blue Ridge Mountains
-            </p>
-          </div>
-        </div>
+  return data;
+}
 
-        {/* About joining */}
-        <div className="bg-rvno-card rounded-lg border-2 border-rvno-border p-5">
-          <h3 className="font-display text-lg font-semibold text-rvno-ink mb-3">
-            About Joining
-          </h3>
-          <div className="space-y-3 font-body text-base text-rvno-ink-muted leading-relaxed">
-            <p>
-              RVNO is an informal group with no membership fees or complicated
-              requirements. If you appreciate Norton motorcycles and enjoy good
-              company, you&apos;re already qualified.
-            </p>
-            <p>
-              The best way to get started is to attend one of our monthly
-              meetups. It&apos;s casual, friendly, and you&apos;ll quickly get a
-              sense of whether we&apos;re your kind of people (we probably are).
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+export default async function ContactPage() {
+  const joiningContent = await getPageContent();
+
+  return <ContactContent joiningContent={joiningContent} />;
 }

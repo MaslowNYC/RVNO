@@ -83,6 +83,61 @@ export type MemberInsert = {
   member_type?: MemberType;
 };
 
+export type PageContent = {
+  id: string;
+  page_key: string;
+  title: string | null;
+  body: string | null;
+  updated_at: string;
+};
+
+export type PageContentInsert = {
+  page_key: string;
+  title?: string | null;
+  body?: string | null;
+};
+
+export type Event = {
+  id: string;
+  title: string;
+  event_date: string;
+  event_time: string | null;
+  location: string | null;
+  description: string | null;
+  open_to_all: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type EventInsert = {
+  title: string;
+  event_date: string;
+  event_time?: string | null;
+  location?: string | null;
+  description?: string | null;
+  open_to_all?: boolean;
+  sort_order?: number;
+};
+
+export type Resource = {
+  id: string;
+  section: string;
+  name: string;
+  url: string;
+  description: string | null;
+  sort_order: number;
+  created_at: string;
+};
+
+export type ResourceInsert = {
+  section: string;
+  name: string;
+  url: string;
+  description?: string | null;
+  sort_order?: number;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -109,6 +164,24 @@ export type Database = {
         Row: Member;
         Insert: MemberInsert;
         Update: Partial<MemberInsert>;
+        Relationships: [];
+      };
+      page_content: {
+        Row: PageContent;
+        Insert: PageContentInsert;
+        Update: Partial<PageContentInsert>;
+        Relationships: [];
+      };
+      events: {
+        Row: Event;
+        Insert: EventInsert;
+        Update: Partial<EventInsert>;
+        Relationships: [];
+      };
+      resources: {
+        Row: Resource;
+        Insert: ResourceInsert;
+        Update: Partial<ResourceInsert>;
         Relationships: [];
       };
     };

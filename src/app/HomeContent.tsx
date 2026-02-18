@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { RoadTimeline } from "@/components/RoadTimeline";
 import { AlbumMap } from "@/components/AlbumMap";
 import { CrewMap } from "@/components/CrewMap";
-import { supabase } from "@/lib/supabase";
 import type { Album, Photo, Member } from "@/lib/database.types";
 
 type AlbumWithCount = Album & { photo_count: number };
@@ -17,17 +16,6 @@ interface HomeContentProps {
 
 export function HomeContent({ albums, photos, members }: HomeContentProps) {
   const [view, setView] = useState<"road" | "map" | "crew">("crew");
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setIsAdmin(!!session);
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsAdmin(!!session);
-    });
-    return () => subscription.unsubscribe();
-  }, []);
 
   return (
     <div className="pb-10">
@@ -68,7 +56,7 @@ export function HomeContent({ albums, photos, members }: HomeContentProps) {
       <div className="px-3">
         <div className="border-t border-rvno-border -mt-px pt-6">
           {view === "crew" && <CrewMap members={members} />}
-          {view === "road" && <RoadTimeline albums={albums} isAdmin={isAdmin} />}
+          {view === "road" && <RoadTimeline albums={albums} />}
           {view === "map" && <AlbumMap albums={albums} photos={photos} />}
         </div>
       </div>
