@@ -14,7 +14,7 @@ interface AboutContentProps {
   inoaContent: PageContent | null;
 }
 
-const DEFAULT_INTRO = `When Dave Youngblood moved to Roanoke, Virginia in 1980 with his 750 Commando, he also brought along his passion for Norton motorcycles. In a desire to welcome like-minded people, he formed Roanoke British Iron in 1986. This was the initial chapter name in the International Norton Owner's Association (INOA).
+const DEFAULT_INTRO = `When Dave Youngblood moved to Roanoke, Virginia in 1980 with his 750 Commando, he also brought along his passion for Norton motorcycles. In a desire to welcome like-minded people, he formed Roanoke British Iron in 1988. This was the initial chapter name in the International Norton Owner's Association (INOA).
 
 Seven years later, Dave introduced Nortons to his veterinarian, Mark Finkler, who previously had only owned Japanese motorcycles. Dave contacted his good friend in Colorado, Todd Blevins, to see if he knew of any decent motorcycles for sale. Todd found a 73' 750 Commando and arranged to have it shipped to Roanoke. This became Mark's first and only Norton. Mark was hooked!
 

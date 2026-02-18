@@ -32,7 +32,7 @@ export function Footer() {
 
       <div className="max-w-5xl mx-auto mt-8 pt-6 border-t border-rvno-border text-center">
         <p className="font-mono text-sm text-rvno-ink-dim tracking-widest">
-          RVNO &middot; EST. 1986
+          RVNO &middot; EST. 1988
         </p>
       </div>
     </footer>

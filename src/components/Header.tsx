@@ -23,7 +23,7 @@ export function Header() {
             RVNO
           </span>
           <span className="font-mono text-xs text-rvno-copper tracking-widest uppercase">
-            Est. 1986
+            Est. 1988
           </span>
         </Link>
 
