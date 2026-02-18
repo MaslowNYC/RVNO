@@ -2,30 +2,17 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/lib/AuthContext";
 import type { Album, Photo } from "@/lib/database.types";
 import Link from "next/link";
 
 export default function AdminPage() {
-  const [session, setSession] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const { session, loading } = useAuth();
   const [albums, setAlbums] = useState<Album[]>([]);
   const [showNewAlbum, setShowNewAlbum] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [authError, setAuthError] = useState("");
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
-    });
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-    return () => subscription.unsubscribe();
-  }, []);
 
   useEffect(() => {
     if (session) {
@@ -53,7 +40,6 @@ export default function AdminPage() {
 
   async function handleLogout() {
     await supabase.auth.signOut();
-    setSession(null);
   }
 
   if (loading) {
