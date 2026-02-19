@@ -152,6 +152,7 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
       location_lat: coords?.lat ?? null,
       location_lng: coords?.lng ?? null,
       sort_order: initialMembers.length,
+      is_crew: true,
     });
     setSaving(false);
     setShowAddForm(false);

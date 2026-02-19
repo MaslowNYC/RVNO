@@ -7,7 +7,8 @@ async function getMembers() {
   const { data } = await supabase
     .from("members")
     .select("*")
-    .order("sort_order", { ascending: true });
+    .eq("is_crew", true)
+    .order("name", { ascending: true });
   return data || [];
 }
 

@@ -39,6 +39,7 @@ export type Member = {
   city: string | null;
   state: string | null;
   country: string | null;
+  is_crew: boolean;
   created_at: string;
 };
 
@@ -77,6 +78,7 @@ export type MemberInsert = {
   city?: string | null;
   state?: string | null;
   country?: string | null;
+  is_crew?: boolean;
 };
 
 export type PageContent = {

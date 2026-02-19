@@ -1,24 +1,53 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
+import { GoogleMap, useJsApiLoader, MarkerF, InfoWindowF } from "@react-google-maps/api";
 import type { Member } from "@/lib/database.types";
 import { useAuth } from "@/lib/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 
-let L: typeof import("leaflet") | null = null;
+const mapContainerStyle = {
+  width: "100%",
+  height: "500px",
+  borderRadius: "6px",
+};
+
+// Default center: Roanoke Valley
+const defaultCenter = { lat: 37.27, lng: -79.94 };
+
+// Dark workshop map style (matching AlbumMap)
+const mapStyles = [
+  { elementType: "geometry", stylers: [{ color: "#2A2A2E" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#1C1C1E" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#6B6760" }] },
+  { featureType: "administrative", elementType: "geometry.stroke", stylers: [{ color: "#3A3A3E" }] },
+  { featureType: "administrative.land_parcel", elementType: "labels.text.fill", stylers: [{ color: "#6B6760" }] },
+  { featureType: "poi", elementType: "geometry", stylers: [{ color: "#323236" }] },
+  { featureType: "poi", elementType: "labels.text.fill", stylers: [{ color: "#6B6760" }] },
+  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#2A3A2E" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#3A3A3E" }] },
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#2A2A2E" }] },
+  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#4A4A4E" }] },
+  { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ color: "#3A3A3E" }] },
+  { featureType: "transit", elementType: "geometry", stylers: [{ color: "#323236" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#1C2428" }] },
+  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#4AABB8" }] },
+];
 
 export function CrewMap({ members }: { members: Member[] }) {
   const { isAdmin } = useAuth();
   const router = useRouter();
-  const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstance = useRef<any>(null);
-  const [ready, setReady] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
 
   // Editing state
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [editForm, setEditForm] = useState({ name: "", title: "" });
   const [saving, setSaving] = useState(false);
+
+  const { isLoaded, loadError } = useJsApiLoader({
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY || "",
+  });
 
   const saveMemberDetails = useCallback(async () => {
     if (!editingMember) return;
@@ -32,199 +61,44 @@ export function CrewMap({ members }: { members: Member[] }) {
     router.refresh();
   }, [editingMember, editForm, router]);
 
-  // Global click handler for edit buttons in popups
-  useEffect(() => {
-    if (!isAdmin) return;
-
-    const handleClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (target.classList.contains("edit-member-btn")) {
-        const memberId = target.dataset.memberId;
-        const member = members.find((m) => m.id === memberId);
-        if (member) {
-          setEditingMember(member);
-          setEditForm({ name: member.name, title: member.title || "" });
-        }
-      }
-    };
-
-    document.addEventListener("click", handleClick);
-    return () => document.removeEventListener("click", handleClick);
-  }, [isAdmin, members]);
-
-  const mappableMembers = members.filter(
-    (m) => m.location_lat && m.location_lng
+  const mappableMembers = useMemo(
+    () => members.filter((m) => m.location_lat && m.location_lng),
+    [members]
   );
 
-  useEffect(() => {
-    import("leaflet").then((leaflet) => {
-      L = leaflet;
-      delete (L.Icon.Default.prototype as any)._getIconUrl;
-      setReady(true);
-    });
-  }, []);
+  // Separate crew from other members
+  const crewMembers = useMemo(
+    () => mappableMembers.filter((m) => m.is_crew),
+    [mappableMembers]
+  );
+  const otherMembers = useMemo(
+    () => mappableMembers.filter((m) => !m.is_crew),
+    [mappableMembers]
+  );
 
-  useEffect(() => {
-    if (!ready || !L || !mapRef.current || mapInstance.current) return;
-
-    const map = L.map(mapRef.current, {
-      zoomControl: true,
-      scrollWheelZoom: true,
-      minZoom: 2,
-      maxZoom: 10,
-    });
-
-    // Stadia Stamen Toner Lite - clean minimal style, perfect for vintage treatment
-    const tileLayer = L.tileLayer(
-      "https://tiles.stadiamaps.com/tiles/stamen_toner_lite/{z}/{x}/{y}{r}.png",
-      {
-        attribution:
-          '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a> &copy; <a href="https://stamen.com/">Stamen Design</a> &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-        maxZoom: 18,
-        className: "vintage-atlas",
-      }
-    ).addTo(map);
-
-    // Custom member marker - red dot like classic road atlas city markers
-    const createMemberIcon = (initials: string) =>
-      L!.divIcon({
-        className: "rvno-crew-marker",
-        html: `<div style="
-          width: 24px; height: 24px;
-          background: #C41E3A;
-          border: 2px solid #8B0000;
-          border-radius: 50%;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.4);
-          display: flex; align-items: center; justify-content: center;
-          font-family: 'IBM Plex Mono', monospace;
-          font-size: 8px; font-weight: 700;
-          color: #FFFFFF;
-          letter-spacing: 0.5px;
-        ">${initials}</div>`,
-        iconSize: [24, 24],
-        iconAnchor: [12, 12],
-        popupAnchor: [0, -14],
-      });
-
-    const markers: any[] = [];
-    mappableMembers.forEach((member) => {
-      if (!L || !member.location_lat || !member.location_lng) return;
-
-      const initials = member.name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .slice(0, 2);
-
-      const marker = L.marker(
-        [member.location_lat, member.location_lng],
-        { icon: createMemberIcon(initials) }
-      ).addTo(map);
-
-      const locationParts = [member.city, member.state, member.country]
-        .filter(Boolean)
-        .join(", ");
-
-      const popupContent = `
-        <div style="
-          font-family: Georgia, 'Times New Roman', serif;
-          min-width: 160px; max-width: 200px;
-          background: #F5F0E1;
-          padding: 10px;
-          border-radius: 4px;
-        ">
-          ${
-            member.photo_url
-              ? `<img src="${member.photo_url}" style="
-                  width: 50px; height: 50px; object-fit: cover;
-                  border-radius: 50%; float: left; margin-right: 10px;
-                  border: 2px solid #8B4513;
-                " />`
-              : ""
-          }
-          <div style="font-family: Georgia, 'Times New Roman', serif; font-size: 14px; font-weight: 700; color: #3C2415;">
-            ${member.name}
-          </div>
-          ${
-            member.title
-              ? `<div style="font-family: 'Courier New', monospace; font-size: 9px; color: #8B4513; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px;">
-                  ${member.title}
-                </div>`
-              : ""
-          }
-          <div style="clear: both;"></div>
-          ${
-            locationParts
-              ? `<div style="font-family: 'Courier New', monospace; font-size: 10px; color: #5C4033; margin-top: 6px;">
-                  ${locationParts}
-                </div>`
-              : ""
-          }
-          ${
-            member.bikes
-              ? `<div style="font-size: 11px; color: #5C4033; margin-top: 4px; font-style: italic;">
-                  ${member.bikes}
-                </div>`
-              : ""
-          }
-          ${
-            member.bio
-              ? `<div style="font-size: 11px; color: #5C4033; margin-top: 6px; line-height: 1.4;">
-                  ${member.bio}
-                </div>`
-              : ""
-          }
-          ${
-            isAdmin
-              ? `<button
-                  class="edit-member-btn"
-                  data-member-id="${member.id}"
-                  style="
-                    margin-top: 8px;
-                    padding: 4px 8px;
-                    background: #8B4513;
-                    border: none;
-                    border-radius: 3px;
-                    color: #F5F0E1;
-                    font-size: 10px;
-                    font-family: Georgia, serif;
-                    cursor: pointer;
-                    width: 100%;
-                  "
-                >Edit</button>`
-              : ""
-          }
-        </div>
-      `;
-
-      marker.bindPopup(popupContent, {
-        maxWidth: 220,
-        className: "rvno-crew-popup",
-      });
-
-      markers.push(marker);
-    });
-
-    // Fit to markers or show world
-    if (markers.length > 1) {
-      const group = L.featureGroup(markers);
-      map.fitBounds(group.getBounds().pad(0.4));
-    } else if (markers.length === 1) {
-      map.setView(
-        [mappableMembers[0].location_lat!, mappableMembers[0].location_lng!],
-        5
-      );
-    } else {
-      map.setView([30, -40], 2); // World view
+  // Find Mark Finker for centering, fall back to default
+  const center = useMemo(() => {
+    const mark = members.find(
+      (m) => m.name.toLowerCase().includes("mark finker") && m.location_lat && m.location_lng
+    );
+    if (mark) {
+      return { lat: mark.location_lat!, lng: mark.location_lng! };
     }
+    return defaultCenter;
+  }, [members]);
 
-    mapInstance.current = map;
-
-    return () => {
-      map.remove();
-      mapInstance.current = null;
-    };
-  }, [ready, mappableMembers]);
+  const onLoad = useCallback(
+    (map: google.maps.Map) => {
+      if (mappableMembers.length > 1) {
+        const bounds = new google.maps.LatLngBounds();
+        mappableMembers.forEach((member) => {
+          bounds.extend({ lat: member.location_lat!, lng: member.location_lng! });
+        });
+        map.fitBounds(bounds, 50);
+      }
+    },
+    [mappableMembers]
+  );
 
   if (mappableMembers.length === 0) {
     return (
@@ -240,63 +114,229 @@ export function CrewMap({ members }: { members: Member[] }) {
     );
   }
 
+  if (loadError) {
+    return (
+      <div className="max-w-[760px] mx-auto bg-rvno-card rounded-md border border-rvno-border p-9 text-center">
+        <p className="text-rvno-ink-muted">Error loading map</p>
+      </div>
+    );
+  }
+
+  if (!isLoaded) {
+    return (
+      <div className="max-w-[760px] mx-auto bg-rvno-card rounded-md border border-rvno-border p-9 text-center min-h-[500px] flex items-center justify-center">
+        <p className="text-rvno-ink-muted">Loading map...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-[760px] mx-auto">
-      <link
-        rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"
-      />
-      <style>{`
-        .rvno-crew-popup .leaflet-popup-content-wrapper {
-          background: #F5F0E1;
-          border-radius: 4px;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-          border: 1px solid #D4C9B0;
-        }
-        .rvno-crew-popup .leaflet-popup-tip {
-          background: #F5F0E1;
-          border-left: 1px solid #D4C9B0;
-          border-bottom: 1px solid #D4C9B0;
-        }
-        .rvno-crew-popup .leaflet-popup-content {
-          margin: 0;
-        }
-        .vintage-atlas {
-          filter: sepia(0.35) saturate(0.8) brightness(1.05) contrast(0.95);
-        }
-        .leaflet-container {
-          background: #F5F0E1 !important;
-        }
-        .leaflet-control-zoom a {
-          background: #F5F0E1 !important;
-          color: #5C4033 !important;
-          border-color: #D4C9B0 !important;
-        }
-        .leaflet-control-zoom a:hover {
-          background: #EBE4D3 !important;
-        }
-        .leaflet-control-attribution {
-          background: rgba(245, 240, 225, 0.9) !important;
-          color: #8B7355 !important;
-          font-size: 9px !important;
-        }
-        .leaflet-control-attribution a {
-          color: #5C4033 !important;
-        }
-      `}</style>
-      <div
-        ref={mapRef}
-        className="w-full rounded-md overflow-hidden border border-rvno-border"
-        style={{ height: "500px" }}
-      />
+      <div className="rounded-md overflow-hidden border border-rvno-border">
+        <GoogleMap
+          mapContainerStyle={mapContainerStyle}
+          center={center}
+          zoom={6}
+          onLoad={onLoad}
+          options={{ styles: mapStyles }}
+        >
+          {/* Crew members - red markers */}
+          {crewMembers.map((member) => (
+            <MarkerF
+              key={member.id}
+              position={{ lat: member.location_lat!, lng: member.location_lng! }}
+              onClick={() => setSelectedMember(member)}
+              icon={{
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 10,
+                fillColor: "#C41E3A",
+                fillOpacity: 1,
+                strokeColor: "#8B0000",
+                strokeWeight: 2,
+              }}
+              label={{
+                text: member.name.split(" ").map((n) => n[0]).join("").slice(0, 2),
+                color: "#FFFFFF",
+                fontSize: "9px",
+                fontWeight: "bold",
+                fontFamily: "'IBM Plex Mono', monospace",
+              }}
+            />
+          ))}
+
+          {/* Other members - teal markers */}
+          {otherMembers.map((member) => (
+            <MarkerF
+              key={member.id}
+              position={{ lat: member.location_lat!, lng: member.location_lng! }}
+              onClick={() => setSelectedMember(member)}
+              icon={{
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 10,
+                fillColor: "#4AABB8",
+                fillOpacity: 1,
+                strokeColor: "#2A7A85",
+                strokeWeight: 2,
+              }}
+              label={{
+                text: member.name.split(" ").map((n) => n[0]).join("").slice(0, 2),
+                color: "#FFFFFF",
+                fontSize: "9px",
+                fontWeight: "bold",
+                fontFamily: "'IBM Plex Mono', monospace",
+              }}
+            />
+          ))}
+
+          {selectedMember && (
+            <InfoWindowF
+              position={{
+                lat: selectedMember.location_lat!,
+                lng: selectedMember.location_lng!,
+              }}
+              onCloseClick={() => setSelectedMember(null)}
+            >
+              <div
+                style={{
+                  fontFamily: "'Atkinson Hyperlegible', system-ui, sans-serif",
+                  minWidth: "160px",
+                  maxWidth: "220px",
+                  background: "#2A2A2E",
+                  padding: "10px",
+                  borderRadius: "4px",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                  {selectedMember.photo_url && (
+                    <img
+                      src={selectedMember.photo_url}
+                      alt={selectedMember.name}
+                      style={{
+                        width: "50px",
+                        height: "50px",
+                        objectFit: "cover",
+                        borderRadius: "50%",
+                        border: "2px solid #C4853A",
+                        flexShrink: 0,
+                      }}
+                    />
+                  )}
+                  <div>
+                    <div
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: 700,
+                        color: "#E8E4DC",
+                      }}
+                    >
+                      {selectedMember.name}
+                    </div>
+                    {selectedMember.title && (
+                      <div
+                        style={{
+                          fontFamily: "'IBM Plex Mono', monospace",
+                          fontSize: "9px",
+                          color: "#C4853A",
+                          textTransform: "uppercase",
+                          letterSpacing: "1px",
+                          marginTop: "2px",
+                        }}
+                      >
+                        {selectedMember.title}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {(selectedMember.city || selectedMember.state || selectedMember.country) && (
+                  <div
+                    style={{
+                      fontFamily: "'IBM Plex Mono', monospace",
+                      fontSize: "10px",
+                      color: "#6B6760",
+                      marginTop: "8px",
+                    }}
+                  >
+                    {[selectedMember.city, selectedMember.state, selectedMember.country]
+                      .filter(Boolean)
+                      .join(", ")}
+                  </div>
+                )}
+
+                {selectedMember.bikes && (
+                  <div
+                    style={{
+                      fontSize: "11px",
+                      color: "#4AABB8",
+                      marginTop: "6px",
+                      fontStyle: "italic",
+                    }}
+                  >
+                    {selectedMember.bikes}
+                  </div>
+                )}
+
+                {selectedMember.bio && (
+                  <div
+                    style={{
+                      fontSize: "11px",
+                      color: "#A09A90",
+                      marginTop: "6px",
+                      lineHeight: 1.4,
+                    }}
+                  >
+                    {selectedMember.bio}
+                  </div>
+                )}
+
+                {isAdmin && (
+                  <button
+                    onClick={() => {
+                      setEditingMember(selectedMember);
+                      setEditForm({
+                        name: selectedMember.name,
+                        title: selectedMember.title || "",
+                      });
+                      setSelectedMember(null);
+                    }}
+                    style={{
+                      marginTop: "8px",
+                      padding: "4px 8px",
+                      background: "#C4853A",
+                      border: "none",
+                      borderRadius: "3px",
+                      color: "#1C1C1E",
+                      fontSize: "10px",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      width: "100%",
+                    }}
+                  >
+                    Edit
+                  </button>
+                )}
+              </div>
+            </InfoWindowF>
+          )}
+        </GoogleMap>
+      </div>
+
       {/* Legend */}
       <div className="flex items-center justify-center gap-6 mt-3">
         <div className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded-full bg-[#C41E3A] border border-[#8B0000]"></span>
           <span className="font-mono text-[9px] text-rvno-ink-dim tracking-wide">
-            MEMBERS ({mappableMembers.length})
+            THE CREW ({crewMembers.length})
           </span>
         </div>
+        {otherMembers.length > 0 && (
+          <div className="flex items-center gap-1.5">
+            <span className="w-3 h-3 rounded-full bg-[#4AABB8] border border-[#2A7A85]"></span>
+            <span className="font-mono text-[9px] text-rvno-ink-dim tracking-wide">
+              MEMBERS ({otherMembers.length})
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Edit member modal */}
