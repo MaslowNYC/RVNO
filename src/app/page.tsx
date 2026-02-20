@@ -6,8 +6,8 @@ export default function Home() {
       {/* Hero image - cinematic full width */}
       <div className="relative w-full flex-1 min-h-[70vh]">
         <Image
-          src="/mark_bike.jpeg"
-          alt="Norton motorcycle on the Blue Ridge Parkway"
+          src="/hero_image.jpeg"
+          alt="RVNO hero image"
           fill
           priority
           className="object-cover"
