@@ -1,26 +1,19 @@
-import Image from "next/image";
+import { supabase } from "@/lib/supabase";
+import { HomeContent } from "./HomeContent";
 
-export default function Home() {
-  return (
-    <div className="min-h-[calc(100vh-80px)] flex flex-col">
-      {/* Hero image - cinematic full width */}
-      <div className="relative w-full flex-1 min-h-[70vh]">
-        <Image
-          src="/hero_image.jpeg"
-          alt="RVNO hero image"
-          fill
-          priority
-          className="object-contain"
-          sizes="100vw"
-        />
-      </div>
+export const revalidate = 60;
 
-      {/* Subtle tagline */}
-      <div className="text-center py-6 bg-rvno-bg">
-        <p className="font-mono text-xs text-rvno-ink-dim tracking-[0.3em] uppercase">
-          Virginia&apos;s Roanoke Valley &middot; Since 1988
-        </p>
-      </div>
-    </div>
-  );
+async function getPageContent() {
+  const { data } = await supabase
+    .from("page_content")
+    .select("body")
+    .eq("page_key", "home_hero_caption")
+    .single();
+  return data?.body || null;
+}
+
+export default async function Home() {
+  const heroCaption = await getPageContent();
+
+  return <HomeContent heroCaption={heroCaption} />;
 }
