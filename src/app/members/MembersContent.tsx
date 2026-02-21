@@ -129,6 +129,33 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
     router.refresh();
   }
 
+  async function moveMember(memberId: string, direction: "up" | "down") {
+    const currentIndex = initialMembers.findIndex((m) => m.id === memberId);
+    if (currentIndex === -1) return;
+
+    const targetIndex =
+      direction === "up" ? currentIndex - 1 : currentIndex + 1;
+
+    if (targetIndex < 0 || targetIndex >= initialMembers.length) return;
+
+    const currentMember = initialMembers[currentIndex];
+    const targetMember = initialMembers[targetIndex];
+
+    // Swap sort_order values
+    await Promise.all([
+      supabase
+        .from("members")
+        .update({ sort_order: targetMember.sort_order })
+        .eq("id", currentMember.id),
+      supabase
+        .from("members")
+        .update({ sort_order: currentMember.sort_order })
+        .eq("id", targetMember.id),
+    ]);
+
+    router.refresh();
+  }
+
   async function addMember() {
     if (!newMember.name) return;
     setSaving(true);
@@ -373,7 +400,54 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
                   </div>
 
                   {isAdmin && (
-                    <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                      <div className="flex flex-col">
+                        <button
+                          onClick={() => moveMember(member.id, "up")}
+                          disabled={
+                            initialMembers.findIndex((m) => m.id === member.id) === 0
+                          }
+                          className="p-1 text-rvno-ink-dim hover:text-rvno-ink disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                          title="Move up"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <polyline points="18 15 12 9 6 15" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => moveMember(member.id, "down")}
+                          disabled={
+                            initialMembers.findIndex((m) => m.id === member.id) ===
+                            initialMembers.length - 1
+                          }
+                          className="p-1 text-rvno-ink-dim hover:text-rvno-ink disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                          title="Move down"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <polyline points="6 9 12 15 18 9" />
+                          </svg>
+                        </button>
+                      </div>
                       <EditButton onClick={() => startEdit(member)} />
                     </div>
                   )}

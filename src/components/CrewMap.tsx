@@ -16,19 +16,33 @@ const mapContainerStyle = {
 // Default center: Roanoke Valley
 const defaultCenter = { lat: 37.27, lng: -79.94 };
 
-// Sepia Atlas vintage map style - warm WW2-era nostalgic feel
+// Faded printed road map style - like an old folded paper atlas
 const mapStyles = [
-  { featureType: "all", elementType: "geometry", stylers: [{ color: "#e5ba63" }] },
-  { featureType: "all", elementType: "labels.text.fill", stylers: [{ gamma: 0.01 }, { lightness: 20 }] },
-  { featureType: "all", elementType: "labels.text.stroke", stylers: [{ saturation: -31 }, { lightness: -33 }, { weight: 2 }, { gamma: 0.8 }] },
+  // Base paper color - aged cream/off-white
+  { featureType: "all", elementType: "geometry", stylers: [{ color: "#f5f0e6" }] },
+  // Labels - muted brown ink
+  { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#5c5248" }] },
+  { featureType: "all", elementType: "labels.text.stroke", stylers: [{ color: "#f5f0e6" }, { weight: 2 }] },
   { featureType: "all", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
-  { featureType: "landscape", elementType: "geometry", stylers: [{ lightness: 30 }, { saturation: 30 }] },
-  { featureType: "poi", elementType: "geometry", stylers: [{ saturation: 20 }] },
-  { featureType: "poi.park", elementType: "geometry", stylers: [{ lightness: 20 }, { saturation: -20 }] },
-  { featureType: "poi.park", elementType: "geometry.fill", stylers: [{ color: "#818b5f" }] },
-  { featureType: "road", elementType: "geometry", stylers: [{ lightness: 10 }, { saturation: -30 }] },
-  { featureType: "road", elementType: "geometry.stroke", stylers: [{ saturation: 25 }, { lightness: 25 }] },
-  { featureType: "water", elementType: "all", stylers: [{ lightness: -20 }] },
+  // Land - subtle cream with slight variation
+  { featureType: "landscape", elementType: "geometry.fill", stylers: [{ color: "#f0ebe0" }] },
+  { featureType: "landscape.natural", elementType: "geometry", stylers: [{ color: "#e8e3d8" }] },
+  // Parks and green areas - faded sage green
+  { featureType: "poi.park", elementType: "geometry.fill", stylers: [{ color: "#d4dcc4" }] },
+  { featureType: "poi", elementType: "geometry", stylers: [{ color: "#e5e0d5" }] },
+  // Roads - subtle gray/brown lines like printed ink
+  { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#ffffff" }] },
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#c5bfb5" }] },
+  { featureType: "road.highway", elementType: "geometry.fill", stylers: [{ color: "#e8dcc8" }] },
+  { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ color: "#b5a898" }] },
+  { featureType: "road.arterial", elementType: "geometry.stroke", stylers: [{ color: "#d5cfc5" }] },
+  // Water - muted dusty blue like old atlas printing
+  { featureType: "water", elementType: "geometry.fill", stylers: [{ color: "#c4d4dc" }] },
+  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#7a8a92" }] },
+  // Administrative boundaries - faint dotted appearance
+  { featureType: "administrative", elementType: "geometry.stroke", stylers: [{ color: "#c5bfb5" }, { weight: 0.5 }] },
+  // Transit - hide most transit features for cleaner look
+  { featureType: "transit", elementType: "all", stylers: [{ visibility: "off" }] },
 ];
 
 export function CrewMap({ members }: { members: Member[] }) {

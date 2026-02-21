@@ -8,7 +8,7 @@ async function getMembers() {
     .from("members")
     .select("*")
     .eq("is_crew", true)
-    .order("name", { ascending: true });
+    .order("sort_order", { ascending: true });
   return data || [];
 }
 
