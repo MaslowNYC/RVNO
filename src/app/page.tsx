@@ -10,7 +10,7 @@ export default function Home() {
           alt="RVNO hero image"
           fill
           priority
-          className="object-cover"
+          className="object-contain"
           sizes="100vw"
         />
       </div>

@@ -6,41 +6,41 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/AuthContext";
 import { useRouter } from "next/navigation";
 
-// Colors matching dark workshop Tailwind config
+// Vintage Rand McNally paper map colors
 const C = {
-  paper: "#2A2A2E",      // Dark card background
-  ink: "#E8E4DC",        // Warm off-white
-  inkMuted: "#9A958A",   // Muted text
-  inkDim: "#6B6760",     // Dim text
-  teal: "#4AABB8",       // Teal accent
-  tealDark: "#3A8A94",   // Dark teal
-  tealMuted: "#3A8A96",  // Muted teal
-  road: "#4A4A4E",       // Road surface
-  roadDark: "#3A3A3E",   // Road shadow
-  roadEdge: "#2A2A2E",   // Road edge
-  roadLine: "#6B6760",   // Center line
-  dot: "#C4853A",        // Brass rivet copper
-  dotHover: "#D4954A",   // Hover copper
-  white: "#E8E4DC",
+  paper: "#ebe3cd",        // Warm paper background
+  paperDark: "#dfd2ae",    // Slightly darker paper
+  ink: "#523735",          // Brown ink
+  inkMuted: "#93817c",     // Muted brown
+  inkDim: "#ae9e90",       // Dim text
+  teal: "#447530",         // Dark green accent
+  road: "#f5f1e6",         // Light road
+  roadHighway: "#f8c967",  // Golden highway
+  roadStroke: "#e9bc62",   // Highway stroke
+  roadEdge: "#c9b2a6",     // Road edge
+  roadLine: "#806b63",     // Center line
+  dot: "#C4853A",          // Brass rivet copper
+  dotHover: "#D4954A",     // Hover copper
+  water: "#b9d3c2",        // Sage water
+  white: "#f5f1e6",
 };
 
 type Point = { x: number; y: number };
 
-// Generate base positions for dots (before offsets are applied)
-function generateBasePositions(width: number, height: number, numPoints: number): Point[] {
+// Generate base positions for year dots
+function generateYearPositions(width: number, height: number, numYears: number): Point[] {
   const points: Point[] = [];
-  const padding = 60;
+  const padding = 80;
   const usableHeight = height - padding * 2;
-  const segmentHeight = usableHeight / (numPoints + 1);
+  const segmentHeight = usableHeight / (numYears + 1);
 
-  for (let i = 0; i < numPoints; i++) {
+  for (let i = 0; i < numYears; i++) {
     const y = padding + (i + 1) * segmentHeight;
-    const progress = (i + 1) / (numPoints + 1);
-    const amplitude = (width - padding * 2) * 0.3;
+    const progress = (i + 1) / (numYears + 1);
+    const amplitude = (width - padding * 2) * 0.25;
     const centerX = width / 2;
-    // Create a nice wave pattern as the default
-    const wave = Math.sin(progress * Math.PI * 2.8 + 0.5) * amplitude;
-    const wobble = Math.sin(progress * 7.3) * 18 + Math.cos(progress * 11.1) * 12;
+    const wave = Math.sin(progress * Math.PI * 2.5 + 0.3) * amplitude;
+    const wobble = Math.sin(progress * 5.7) * 15 + Math.cos(progress * 8.3) * 10;
     points.push({ x: centerX + wave + wobble, y });
   }
 
@@ -48,7 +48,6 @@ function generateBasePositions(width: number, height: number, numPoints: number)
 }
 
 // Catmull-Rom to Cubic Bezier conversion
-// Given 4 points (p0, p1, p2, p3), compute the bezier control points for the segment p1->p2
 function catmullRomToBezier(
   p0: Point,
   p1: Point,
@@ -69,21 +68,18 @@ function catmullRomToBezier(
   };
 }
 
-// Generate a smooth SVG path through all points using Catmull-Rom splines
+// Generate a smooth SVG path through all points
 function generateSmoothPath(points: Point[], tension: number = 0.4): string {
   if (points.length < 2) return "";
 
-  // Add virtual points at start and end for smooth curves
   const extended = [
-    { x: points[0].x, y: points[0].y - 60 }, // Virtual start point above first
+    { x: points[0].x, y: points[0].y - 60 },
     ...points,
-    { x: points[points.length - 1].x + 30, y: points[points.length - 1].y + 80 }, // Virtual end point below last
+    { x: points[points.length - 1].x + 30, y: points[points.length - 1].y + 80 },
   ];
 
-  // Start path at the virtual start point (above first dot)
   let d = `M ${extended[0].x} ${extended[0].y - 30}`;
 
-  // Generate bezier curves for each segment
   for (let i = 0; i < extended.length - 1; i++) {
     const p0 = extended[Math.max(0, i - 1)];
     const p1 = extended[i];
@@ -104,7 +100,11 @@ interface RoadTimelineProps {
   albums: TimelineAlbum[];
 }
 
-// Track offsets per album for draggable dots
+type YearData = {
+  year: number;
+  albums: TimelineAlbum[];
+};
+
 type OffsetMap = Record<string, { x: number; y: number }>;
 
 export function RoadTimeline({ albums }: RoadTimelineProps) {
@@ -112,31 +112,56 @@ export function RoadTimeline({ albums }: RoadTimelineProps) {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const [hoveredAlbum, setHoveredAlbum] = useState<TimelineAlbum | null>(null);
+  const [hoveredYear, setHoveredYear] = useState<number | null>(null);
   const [hoverPos, setHoverPos] = useState({ x: 0, y: 0 });
   const [hoverSide, setHoverSide] = useState<"left" | "right">("right");
   const [width, setWidth] = useState(700);
+  const [expandedYear, setExpandedYear] = useState<number | null>(null);
 
   // Editing state
   const [editingAlbum, setEditingAlbum] = useState<TimelineAlbum | null>(null);
   const [editForm, setEditForm] = useState({ title: "", description: "" });
   const [saving, setSaving] = useState(false);
 
-  // Admin drag state
+  // Admin drag state for year dots
   const [offsets, setOffsets] = useState<OffsetMap>({});
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const dragStartRef = useRef<{ x: number; y: number; offsetX: number; offsetY: number } | null>(null);
 
-  const albumCount = albums.length;
-  const roadHeight = Math.max(900, albumCount * 95 + 160);
+  // Group albums by year
+  const yearData = useMemo(() => {
+    const grouped: Record<number, TimelineAlbum[]> = {};
+    albums.forEach((album) => {
+      const year = new Date(album.event_date + "T00:00:00").getFullYear();
+      if (!grouped[year]) grouped[year] = [];
+      grouped[year].push(album);
+    });
 
-  // Initialize offsets from album data
+    // Sort years ascending and sort albums within each year by date
+    const years = Object.keys(grouped)
+      .map(Number)
+      .sort((a, b) => a - b);
+
+    return years.map((year) => ({
+      year,
+      albums: grouped[year].sort(
+        (a, b) => new Date(a.event_date).getTime() - new Date(b.event_date).getTime()
+      ),
+    }));
+  }, [albums]);
+
+  const yearCount = yearData.length;
+  const roadHeight = Math.max(600, yearCount * 120 + 200);
+
+  // Initialize offsets for year dots
   useEffect(() => {
     const initial: OffsetMap = {};
-    albums.forEach((a) => {
-      initial[a.id] = { x: a.offset_x ?? 0, y: a.offset_y ?? 0 };
+    yearData.forEach((yd) => {
+      // Use year as the key
+      initial[`year-${yd.year}`] = { x: 0, y: 0 };
     });
     setOffsets(initial);
-  }, [albums]);
+  }, [yearData]);
 
   useEffect(() => {
     const update = () => {
@@ -147,14 +172,6 @@ export function RoadTimeline({ albums }: RoadTimelineProps) {
     update();
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
-  }, []);
-
-  // Save offset to Supabase
-  const saveOffset = useCallback(async (albumId: string, offsetX: number, offsetY: number) => {
-    await supabase
-      .from("albums")
-      .update({ offset_x: offsetX, offset_y: offsetY })
-      .eq("id", albumId);
   }, []);
 
   // Save album title/description
@@ -181,14 +198,13 @@ export function RoadTimeline({ albums }: RoadTimelineProps) {
     setEditForm({ title: "", description: "" });
   }, []);
 
-  // Drag handlers
+  // Drag handlers for year dots (admin only)
   const handleDragStart = useCallback(
-    (e: React.MouseEvent | React.TouchEvent, albumId: string) => {
+    (e: React.MouseEvent | React.TouchEvent, yearKey: string) => {
       if (!isAdmin) return;
       e.preventDefault();
       e.stopPropagation();
 
-      // Get client coordinates with null checks
       let clientX: number;
       let clientY: number;
       if ("touches" in e && e.touches && e.touches.length > 0) {
@@ -198,12 +214,12 @@ export function RoadTimeline({ albums }: RoadTimelineProps) {
         clientX = e.clientX;
         clientY = e.clientY;
       } else {
-        return; // Can't get coordinates, abort
+        return;
       }
 
-      const current = offsets[albumId] || { x: 0, y: 0 };
+      const current = offsets[yearKey] || { x: 0, y: 0 };
       dragStartRef.current = { x: clientX, y: clientY, offsetX: current.x, offsetY: current.y };
-      setDraggingId(albumId);
+      setDraggingId(yearKey);
     },
     [isAdmin, offsets]
   );
@@ -213,7 +229,6 @@ export function RoadTimeline({ albums }: RoadTimelineProps) {
       const dragStart = dragStartRef.current;
       if (!draggingId || !dragStart) return;
 
-      // Get client coordinates with null checks
       let clientX: number;
       let clientY: number;
       if ("touches" in e && e.touches && e.touches.length > 0) {
@@ -223,22 +238,19 @@ export function RoadTimeline({ albums }: RoadTimelineProps) {
         clientX = e.clientX;
         clientY = e.clientY;
       } else {
-        return; // Can't get coordinates, abort
+        return;
       }
 
       const dx = clientX - dragStart.x;
       const dy = clientY - dragStart.y;
-      // Clamp to keep dots within SVG bounds (with padding)
-      const maxOffsetX = width * 0.4;
-      const maxOffsetY = roadHeight * 0.1;
-      const startOffsetX = dragStart.offsetX;
-      const startOffsetY = dragStart.offsetY;
+      const maxOffsetX = width * 0.35;
+      const maxOffsetY = roadHeight * 0.08;
 
       setOffsets((prev) => ({
         ...prev,
         [draggingId]: {
-          x: Math.max(-maxOffsetX, Math.min(maxOffsetX, startOffsetX + dx)),
-          y: Math.max(-maxOffsetY, Math.min(maxOffsetY, startOffsetY + dy)),
+          x: Math.max(-maxOffsetX, Math.min(maxOffsetX, dragStart.offsetX + dx)),
+          y: Math.max(-maxOffsetY, Math.min(maxOffsetY, dragStart.offsetY + dy)),
         },
       }));
     },
@@ -246,17 +258,10 @@ export function RoadTimeline({ albums }: RoadTimelineProps) {
   );
 
   const handleDragEnd = useCallback(() => {
-    if (draggingId) {
-      const currentOffset = offsets[draggingId];
-      if (currentOffset) {
-        saveOffset(draggingId, currentOffset.x, currentOffset.y);
-      }
-    }
     setDraggingId(null);
     dragStartRef.current = null;
-  }, [draggingId, offsets, saveOffset]);
+  }, []);
 
-  // Global drag listeners
   useEffect(() => {
     if (!draggingId) return;
     window.addEventListener("mousemove", handleDragMove);
@@ -271,45 +276,71 @@ export function RoadTimeline({ albums }: RoadTimelineProps) {
     };
   }, [draggingId, handleDragMove, handleDragEnd]);
 
-  // Compute base positions (without offsets)
+  // Compute base positions for year dots
   const basePositions = useMemo(() => {
-    if (width <= 0 || albumCount === 0) return [];
-    return generateBasePositions(width, roadHeight, albumCount);
-  }, [width, roadHeight, albumCount]);
+    if (width <= 0 || yearCount === 0) return [];
+    return generateYearPositions(width, roadHeight, yearCount);
+  }, [width, roadHeight, yearCount]);
 
-  // Compute actual dot positions (base + offset) - recalculates on every drag
-  const dotPositions = useMemo(() => {
-    const padding = 30;
+  // Compute actual year dot positions (base + offset)
+  const yearPositions = useMemo(() => {
+    const padding = 40;
     return basePositions.map((base, idx) => {
-      const album = albums[idx];
-      const offset = offsets[album?.id] || { x: 0, y: 0 };
-      // Clamp final position to stay within SVG bounds
+      const yd = yearData[idx];
+      const offset = offsets[`year-${yd?.year}`] || { x: 0, y: 0 };
       return {
         x: Math.max(padding, Math.min(width - padding, base.x + offset.x)),
         y: Math.max(padding, Math.min(roadHeight - padding, base.y + offset.y)),
       };
     });
-  }, [basePositions, albums, offsets, width, roadHeight]);
+  }, [basePositions, yearData, offsets, width, roadHeight]);
 
-  // Generate the road path through all dot positions - updates in real-time during drag
+  // Generate the road path through year positions
   const roadPath = useMemo(() => {
-    if (dotPositions.length === 0) return "";
-    return generateSmoothPath(dotPositions, 0.4);
-  }, [dotPositions]);
+    if (yearPositions.length === 0) return "";
+    return generateSmoothPath(yearPositions, 0.4);
+  }, [yearPositions]);
 
-  const handleDotHover = useCallback(
-    (album: TimelineAlbum, point: { x: number; y: number }) => {
-      setHoveredAlbum(album);
-      setHoverPos({ x: point.x, y: point.y });
-      setHoverSide(point.x > width / 2 ? "left" : "right");
+  // Calculate album dot positions for expanded year
+  const getAlbumPositions = useCallback(
+    (yearIndex: number, yearPos: Point, albumCount: number): Point[] => {
+      const positions: Point[] = [];
+      const baseRadius = 45;
+      const radiusIncrement = 25;
+      const startAngle = yearPos.x > width / 2 ? Math.PI * 0.6 : Math.PI * 0.4;
+      const endAngle = yearPos.x > width / 2 ? Math.PI * 1.4 : -Math.PI * 0.4;
+
+      for (let i = 0; i < albumCount; i++) {
+        const t = albumCount === 1 ? 0.5 : i / (albumCount - 1);
+        const angle = startAngle + t * (endAngle - startAngle);
+        const radius = baseRadius + (i % 2) * radiusIncrement;
+        positions.push({
+          x: yearPos.x + Math.cos(angle) * radius,
+          y: yearPos.y + Math.sin(angle) * radius,
+        });
+      }
+
+      return positions;
     },
     [width]
   );
 
+  const handleYearClick = useCallback(
+    (year: number) => {
+      setExpandedYear((prev) => (prev === year ? null : year));
+      setHoveredYear(null);
+    },
+    []
+  );
+
+  const handleAlbumClick = useCallback((albumId: string) => {
+    window.location.href = `/album/${albumId}`;
+  }, []);
+
   if (albums.length === 0) {
     return (
       <div className="text-center py-20">
-        <p className="font-mono text-sm text-rvno-ink-dim">
+        <p className="font-mono text-sm" style={{ color: C.inkMuted }}>
           No rides yet. The road is waiting.
         </p>
       </div>
@@ -318,12 +349,11 @@ export function RoadTimeline({ albums }: RoadTimelineProps) {
 
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr + "T00:00:00");
-    return d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
 
-  // Get first and last dot positions for labels
-  const firstDot = dotPositions[0];
-  const lastDot = dotPositions[dotPositions.length - 1];
+  const firstDot = yearPositions[0];
+  const lastDot = yearPositions[yearPositions.length - 1];
 
   return (
     <div ref={containerRef} className="relative w-full max-w-[760px] mx-auto">
@@ -331,198 +361,312 @@ export function RoadTimeline({ albums }: RoadTimelineProps) {
         width={width}
         height={roadHeight + 40}
         viewBox={`0 0 ${width} ${roadHeight + 40}`}
+        style={{ background: C.paper, borderRadius: "6px" }}
       >
         <defs>
-          <linearGradient id="roadFade" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0.88" stopColor={C.road} stopOpacity="1" />
-            <stop offset="1" stopColor={C.road} stopOpacity="0" />
+          <linearGradient id="roadFadeVintage" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0.88" stopColor={C.roadHighway} stopOpacity="1" />
+            <stop offset="1" stopColor={C.roadHighway} stopOpacity="0" />
           </linearGradient>
-          <filter id="glow">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
+          <filter id="paperTexture">
+            <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="5" result="noise" />
+            <feDiffuseLighting in="noise" lightingColor={C.paper} surfaceScale="1.5" result="diffLight">
+              <feDistantLight azimuth="45" elevation="60" />
+            </feDiffuseLighting>
           </filter>
         </defs>
 
-        {/* Background */}
-        <rect width={width} height={roadHeight + 40} fill={C.paper} rx="4" />
+        {/* Paper background with subtle texture */}
+        <rect width={width} height={roadHeight + 40} fill={C.paper} rx="6" />
 
-        {/* Grid lines */}
-        {Array.from({ length: Math.floor(width / 70) }).map((_, i) => (
+        {/* Grid lines - like map grid */}
+        {Array.from({ length: Math.floor(width / 80) }).map((_, i) => (
           <line
             key={`v-${i}`}
-            x1={i * 70}
+            x1={i * 80}
             y1="0"
-            x2={i * 70}
+            x2={i * 80}
             y2={roadHeight + 40}
-            stroke={C.ink}
-            strokeWidth="0.15"
-            opacity="0.05"
+            stroke={C.roadEdge}
+            strokeWidth="0.3"
+            opacity="0.3"
           />
         ))}
-        {Array.from({ length: Math.floor(roadHeight / 70) }).map((_, i) => (
+        {Array.from({ length: Math.floor(roadHeight / 80) }).map((_, i) => (
           <line
             key={`h-${i}`}
             x1="0"
-            y1={i * 70}
+            y1={i * 80}
             x2={width}
-            y2={i * 70}
-            stroke={C.ink}
-            strokeWidth="0.15"
-            opacity="0.05"
+            y2={i * 80}
+            stroke={C.roadEdge}
+            strokeWidth="0.3"
+            opacity="0.3"
           />
         ))}
 
-        {/* Compass */}
-        <g transform={`translate(${width - 44}, 50)`} opacity="0.25">
-          <circle r="20" fill="none" stroke={C.ink} strokeWidth="0.5" />
-          <circle r="16" fill="none" stroke={C.ink} strokeWidth="0.3" />
-          <line x1="0" y1="-14" x2="0" y2="14" stroke={C.ink} strokeWidth="0.4" />
-          <line x1="-14" y1="0" x2="14" y2="0" stroke={C.ink} strokeWidth="0.4" />
-          <polygon points="0,-13 -2.5,-4 2.5,-4" fill={C.dot} opacity="0.6" />
-          <text y="-22" textAnchor="middle" fontSize="6" fontFamily="'Playfair Display', Georgia, serif" fill={C.ink} opacity="0.35">
+        {/* Compass rose */}
+        <g transform={`translate(${width - 50}, 55)`} opacity="0.5">
+          <circle r="22" fill="none" stroke={C.ink} strokeWidth="0.8" />
+          <circle r="18" fill="none" stroke={C.ink} strokeWidth="0.4" />
+          <line x1="0" y1="-16" x2="0" y2="16" stroke={C.ink} strokeWidth="0.5" />
+          <line x1="-16" y1="0" x2="16" y2="0" stroke={C.ink} strokeWidth="0.5" />
+          <polygon points="0,-15 -3,-5 3,-5" fill={C.dot} />
+          <text y="-26" textAnchor="middle" fontSize="8" fontFamily="'Playfair Display', Georgia, serif" fill={C.ink} fontWeight="600">
             N
+          </text>
+          <text y="32" textAnchor="middle" fontSize="6" fontFamily="'Playfair Display', Georgia, serif" fill={C.inkDim}>
+            S
+          </text>
+          <text x="-28" y="3" textAnchor="middle" fontSize="6" fontFamily="'Playfair Display', Georgia, serif" fill={C.inkDim}>
+            W
+          </text>
+          <text x="28" y="3" textAnchor="middle" fontSize="6" fontFamily="'Playfair Display', Georgia, serif" fill={C.inkDim}>
+            E
           </text>
         </g>
 
         {/* Title */}
-        <g transform={`translate(${width / 2}, 30)`}>
-          <text textAnchor="middle" fontSize="9" fontFamily="'IBM Plex Mono', monospace" fill={C.teal} letterSpacing="3">
+        <g transform={`translate(${width / 2}, 35)`}>
+          <text textAnchor="middle" fontSize="11" fontFamily="'Playfair Display', Georgia, serif" fill={C.ink} fontWeight="600" letterSpacing="2">
             ROANOKE VALLEY NORTON OWNERS
           </text>
-          <text textAnchor="middle" y="15" fontSize="7" fontFamily="'IBM Plex Mono', monospace" fill={C.inkDim} letterSpacing="2">
+          <text textAnchor="middle" y="18" fontSize="8" fontFamily="'IBM Plex Mono', monospace" fill={C.inkMuted} letterSpacing="3">
             THE ROAD SO FAR
           </text>
         </g>
 
-        {/* Road layers - path now passes through dot positions */}
+        {/* Road layers */}
         {roadPath && (
           <>
-            <path d={roadPath} fill="none" stroke="rgba(0,0,0,0.2)" strokeWidth="24" strokeLinecap="round" strokeLinejoin="round" />
-            <path d={roadPath} fill="none" stroke={C.roadEdge} strokeWidth="20" strokeLinecap="round" strokeLinejoin="round" />
-            <path d={roadPath} fill="none" stroke="url(#roadFade)" strokeWidth="18" strokeLinecap="round" strokeLinejoin="round" />
-            <path d={roadPath} fill="none" stroke={C.roadLine} strokeWidth="1.5" strokeLinecap="round" strokeDasharray="10,8" opacity="0.45" />
+            <path d={roadPath} fill="none" stroke={C.roadEdge} strokeWidth="26" strokeLinecap="round" strokeLinejoin="round" />
+            <path d={roadPath} fill="none" stroke={C.road} strokeWidth="22" strokeLinecap="round" strokeLinejoin="round" />
+            <path d={roadPath} fill="none" stroke="url(#roadFadeVintage)" strokeWidth="20" strokeLinecap="round" strokeLinejoin="round" />
+            <path d={roadPath} fill="none" stroke={C.roadLine} strokeWidth="2" strokeLinecap="round" strokeDasharray="12,10" opacity="0.5" />
           </>
         )}
 
-        {/* Event dots */}
-        {dotPositions.map((pos, idx) => {
-          const album = albums[idx];
-          if (!album) return null;
-          const isHovered = hoveredAlbum?.id === album.id;
-          const isDragging = draggingId === album.id;
+        {/* Year dots */}
+        {yearPositions.map((pos, idx) => {
+          const yd = yearData[idx];
+          if (!yd) return null;
+          const isExpanded = expandedYear === yd.year;
+          const isHovered = hoveredYear === yd.year;
+          const isDragging = draggingId === `year-${yd.year}`;
+          const yearKey = `year-${yd.year}`;
           const dotX = pos.x;
           const dotY = pos.y;
           const labelSide = dotX > width / 2 ? "left" : "right";
-          const labelX = labelSide === "right" ? dotX + 18 : dotX - 18;
+          const labelX = labelSide === "right" ? dotX + 22 : dotX - 22;
+
+          // Album positions for expanded year
+          const albumPositions = isExpanded ? getAlbumPositions(idx, pos, yd.albums.length) : [];
 
           return (
-            <g
-              key={album.id}
-              onMouseEnter={() => !isDragging && handleDotHover(album, { x: dotX, y: dotY })}
-              onMouseLeave={() => !isDragging && setHoveredAlbum(null)}
-              onClick={() => {
-                if (isAdmin && !isDragging) {
-                  // Admin click without drag: still navigate
-                  const offset = offsets[album.id] || { x: 0, y: 0 };
-                  const moved = dragStartRef.current
-                    ? Math.abs(offset.x - dragStartRef.current.offsetX) > 3 ||
-                      Math.abs(offset.y - dragStartRef.current.offsetY) > 3
-                    : false;
-                  if (!moved) window.location.href = `/album/${album.id}`;
-                } else if (!isAdmin) {
-                  window.location.href = `/album/${album.id}`;
-                }
-              }}
-              onMouseDown={(e) => isAdmin && handleDragStart(e, album.id)}
-              onTouchStart={(e) => isAdmin && handleDragStart(e, album.id)}
-              style={{ cursor: isAdmin ? (isDragging ? "grabbing" : "grab") : "pointer" }}
-            >
-              <line
-                x1={dotX} y1={dotY} x2={labelX} y2={dotY}
-                stroke={isHovered || isDragging ? C.dot : C.inkDim}
-                strokeWidth={isHovered || isDragging ? 1 : 0.4}
-                opacity={isHovered || isDragging ? 0.7 : 0.25}
-                strokeDasharray={isHovered || isDragging ? "none" : "2,2"}
-              />
+            <g key={yd.year}>
+              {/* Branch lines to albums when expanded */}
+              {isExpanded &&
+                albumPositions.map((albumPos, albumIdx) => (
+                  <line
+                    key={`branch-${albumIdx}`}
+                    x1={dotX}
+                    y1={dotY}
+                    x2={albumPos.x}
+                    y2={albumPos.y}
+                    stroke={C.roadEdge}
+                    strokeWidth="2"
+                    strokeDasharray="4,3"
+                    opacity="0.6"
+                  />
+                ))}
 
-              {/* Admin mode indicator ring */}
-              {isAdmin && (
-                <circle
-                  cx={dotX} cy={dotY} r="10"
-                  fill="none"
-                  stroke={C.teal}
-                  strokeWidth="1"
-                  strokeDasharray="3,2"
-                  opacity={isDragging ? 0.8 : 0.3}
+              {/* Album dots when expanded */}
+              {isExpanded &&
+                yd.albums.map((album, albumIdx) => {
+                  const albumPos = albumPositions[albumIdx];
+                  if (!albumPos) return null;
+                  const isAlbumHovered = hoveredAlbum?.id === album.id;
+
+                  return (
+                    <g
+                      key={album.id}
+                      onMouseEnter={() => {
+                        setHoveredAlbum(album);
+                        setHoverPos(albumPos);
+                        setHoverSide(albumPos.x > width / 2 ? "left" : "right");
+                      }}
+                      onMouseLeave={() => setHoveredAlbum(null)}
+                      onClick={() => handleAlbumClick(album.id)}
+                      style={{ cursor: "pointer" }}
+                    >
+                      <circle
+                        cx={albumPos.x}
+                        cy={albumPos.y}
+                        r={isAlbumHovered ? 10 : 8}
+                        fill={isAlbumHovered ? C.dotHover : C.dot}
+                        stroke={C.paper}
+                        strokeWidth="2"
+                        style={{ transition: "all 0.15s" }}
+                      />
+                      <circle cx={albumPos.x} cy={albumPos.y} r="2" fill={C.white} opacity="0.8" />
+                      <text
+                        x={albumPos.x}
+                        y={albumPos.y + 22}
+                        textAnchor="middle"
+                        fontSize="8"
+                        fontFamily="'IBM Plex Mono', monospace"
+                        fill={isAlbumHovered ? C.ink : C.inkMuted}
+                        fontWeight={isAlbumHovered ? "600" : "400"}
+                      >
+                        {formatDate(album.event_date)}
+                      </text>
+                    </g>
+                  );
+                })}
+
+              {/* Year dot */}
+              <g
+                onMouseEnter={() => !isDragging && !isExpanded && setHoveredYear(yd.year)}
+                onMouseLeave={() => setHoveredYear(null)}
+                onClick={() => {
+                  if (!isDragging) {
+                    const offset = offsets[yearKey] || { x: 0, y: 0 };
+                    const moved = dragStartRef.current
+                      ? Math.abs(offset.x - dragStartRef.current.offsetX) > 3 ||
+                        Math.abs(offset.y - dragStartRef.current.offsetY) > 3
+                      : false;
+                    if (!moved) handleYearClick(yd.year);
+                  }
+                }}
+                onMouseDown={(e) => isAdmin && handleDragStart(e, yearKey)}
+                onTouchStart={(e) => isAdmin && handleDragStart(e, yearKey)}
+                style={{ cursor: isAdmin ? (isDragging ? "grabbing" : "grab") : "pointer" }}
+              >
+                {/* Connection line to label */}
+                <line
+                  x1={dotX}
+                  y1={dotY}
+                  x2={labelX}
+                  y2={dotY}
+                  stroke={isHovered || isExpanded || isDragging ? C.dot : C.inkDim}
+                  strokeWidth={isHovered || isExpanded || isDragging ? 1.5 : 0.6}
+                  opacity={isHovered || isExpanded || isDragging ? 0.8 : 0.3}
+                  strokeDasharray={isHovered || isExpanded || isDragging ? "none" : "3,3"}
                 />
-              )}
 
-              <circle
-                cx={dotX} cy={dotY} r="5"
-                fill={isDragging ? C.teal : C.dot}
-                stroke={C.paper} strokeWidth="2"
-              />
-              <circle cx={dotX} cy={dotY} r="1.5" fill={C.white} opacity="0.7" />
+                {/* Admin drag indicator */}
+                {isAdmin && (
+                  <circle
+                    cx={dotX}
+                    cy={dotY}
+                    r="14"
+                    fill="none"
+                    stroke={C.teal}
+                    strokeWidth="1"
+                    strokeDasharray="4,3"
+                    opacity={isDragging ? 0.9 : 0.4}
+                  />
+                )}
 
-              <text
-                x={labelX + (labelSide === "right" ? 5 : -5)}
-                y={dotY - 5}
-                textAnchor={labelSide === "right" ? "start" : "end"}
-                fontSize="8"
-                fontFamily="'IBM Plex Mono', monospace"
-                fontWeight="500"
-                fill={isHovered || isDragging ? C.teal : C.inkDim}
-                opacity={isHovered || isDragging ? 1 : 0.6}
-                letterSpacing="0.5"
-              >
-                {formatDate(album.event_date)}
-              </text>
+                {/* Main year dot */}
+                <circle
+                  cx={dotX}
+                  cy={dotY}
+                  r={isExpanded ? 10 : 8}
+                  fill={isDragging ? C.teal : isExpanded ? C.dotHover : C.dot}
+                  stroke={C.paper}
+                  strokeWidth="3"
+                  style={{ transition: isDragging ? "none" : "all 0.2s" }}
+                />
+                <circle cx={dotX} cy={dotY} r="2.5" fill={C.white} opacity="0.8" />
 
-              <text
-                x={labelX + (labelSide === "right" ? 5 : -5)}
-                y={dotY + 7}
-                textAnchor={labelSide === "right" ? "start" : "end"}
-                fontSize="10"
-                fontFamily="'Playfair Display', Georgia, serif"
-                fontWeight={isHovered || isDragging ? "700" : "400"}
-                fill={isHovered || isDragging ? C.ink : C.inkMuted}
-                style={{ transition: isDragging ? "none" : "all 0.15s" }}
-              >
-                {album.title.length > 28 ? album.title.slice(0, 26) + "…" : album.title}
-              </text>
+                {/* Album count badge */}
+                {yd.albums.length > 1 && !isExpanded && (
+                  <g transform={`translate(${dotX + 8}, ${dotY - 8})`}>
+                    <circle r="7" fill={C.ink} />
+                    <text
+                      textAnchor="middle"
+                      y="3"
+                      fontSize="8"
+                      fontFamily="'IBM Plex Mono', monospace"
+                      fill={C.paper}
+                      fontWeight="600"
+                    >
+                      {yd.albums.length}
+                    </text>
+                  </g>
+                )}
+
+                {/* Year label */}
+                <text
+                  x={labelX + (labelSide === "right" ? 8 : -8)}
+                  y={dotY + 5}
+                  textAnchor={labelSide === "right" ? "start" : "end"}
+                  fontSize="16"
+                  fontFamily="'Playfair Display', Georgia, serif"
+                  fontWeight={isHovered || isExpanded || isDragging ? "700" : "500"}
+                  fill={isHovered || isExpanded || isDragging ? C.ink : C.inkMuted}
+                  style={{ transition: isDragging ? "none" : "all 0.15s" }}
+                >
+                  {yd.year}
+                </text>
+
+                {/* Album count text */}
+                <text
+                  x={labelX + (labelSide === "right" ? 8 : -8)}
+                  y={dotY + 20}
+                  textAnchor={labelSide === "right" ? "start" : "end"}
+                  fontSize="9"
+                  fontFamily="'IBM Plex Mono', monospace"
+                  fill={C.inkDim}
+                >
+                  {yd.albums.length} {yd.albums.length === 1 ? "ride" : "rides"}
+                </text>
+              </g>
             </g>
           );
         })}
 
         {/* Start label */}
         {firstDot && (
-          <g transform={`translate(${firstDot.x - 40}, ${firstDot.y - 38})`}>
-            <text fontSize="6" fontFamily="'IBM Plex Mono', monospace" fill={C.inkDim} letterSpacing="2" opacity="0.4" transform="rotate(-10)">
+          <g transform={`translate(${firstDot.x - 45}, ${firstDot.y - 42})`}>
+            <text
+              fontSize="7"
+              fontFamily="'IBM Plex Mono', monospace"
+              fill={C.inkDim}
+              letterSpacing="2"
+              opacity="0.5"
+              transform="rotate(-8)"
+            >
               WHERE IT BEGAN
             </text>
           </g>
         )}
 
-        {/* End — no finish line */}
+        {/* End label */}
         {lastDot && (
           <text
-            x={lastDot.x + 30}
-            y={roadHeight + 5}
-            fontSize="6"
+            x={lastDot.x + 35}
+            y={roadHeight + 10}
+            fontSize="7"
             fontFamily="'IBM Plex Mono', monospace"
             fill={C.inkDim}
             letterSpacing="2"
-            opacity="0.25"
+            opacity="0.35"
           >
             MORE ROAD AHEAD →
           </text>
         )}
+
+        {/* Legend */}
+        <g transform={`translate(20, ${roadHeight + 20})`}>
+          <text fontSize="7" fontFamily="'IBM Plex Mono', monospace" fill={C.inkDim} letterSpacing="1">
+            CLICK A YEAR TO EXPAND • {yearData.length} YEARS • {albums.length} RIDES
+          </text>
+        </g>
       </svg>
 
-      {/* Hover popup */}
+      {/* Hover popup for albums */}
       {hoveredAlbum && !editingAlbum && (
         <div
           className={`absolute z-50 ${isAdmin ? "pointer-events-auto" : "pointer-events-none"}`}
@@ -532,12 +676,13 @@ export function RoadTimeline({ albums }: RoadTimelineProps) {
             animation: "fadeIn 0.15s ease-out",
           }}
         >
-          <div className="w-60 bg-rvno-card rounded-md overflow-hidden border border-rvno-border shadow-xl">
+          <div
+            className="w-60 rounded-md overflow-hidden shadow-xl"
+            style={{ background: C.paper, border: `1px solid ${C.roadEdge}` }}
+          >
             <div
               className="h-24 flex items-center justify-center relative"
-              style={{
-                background: `linear-gradient(135deg, ${C.tealDark}, ${C.tealMuted})`,
-              }}
+              style={{ background: C.paperDark }}
             >
               {hoveredAlbum.cover_photo_url ? (
                 <img
@@ -546,32 +691,34 @@ export function RoadTimeline({ albums }: RoadTimelineProps) {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <span className="font-mono text-[10px] text-white/60 tracking-wide uppercase">
-                  {hoveredAlbum.photo_count
-                    ? `${hoveredAlbum.photo_count} photos`
-                    : "Album"}
+                <span className="font-mono text-[10px] tracking-wide uppercase" style={{ color: C.inkMuted }}>
+                  {hoveredAlbum.photo_count ? `${hoveredAlbum.photo_count} photos` : "Album"}
                 </span>
               )}
-              <span className="absolute bottom-1.5 right-2 bg-black/35 text-white/80 text-[9px] px-1.5 py-0.5 rounded font-mono">
+              <span
+                className="absolute bottom-1.5 right-2 text-[9px] px-1.5 py-0.5 rounded font-mono"
+                style={{ background: "rgba(0,0,0,0.35)", color: C.white }}
+              >
                 {hoveredAlbum.location_name}
               </span>
             </div>
             <div className="p-3">
-              <h3 className="font-display text-sm font-semibold text-rvno-ink leading-tight mb-1">
+              <h3 className="font-display text-sm font-semibold leading-tight mb-1" style={{ color: C.ink }}>
                 {hoveredAlbum.title}
               </h3>
-              <p className="font-mono text-[10px] text-rvno-teal mb-1.5">
+              <p className="font-mono text-[10px] mb-1.5" style={{ color: C.dot }}>
                 {formatDate(hoveredAlbum.event_date)}
               </p>
               {hoveredAlbum.description && (
-                <p className="font-body text-[11px] text-rvno-ink-muted leading-relaxed">
+                <p className="font-body text-[11px] leading-relaxed" style={{ color: C.inkMuted }}>
                   {hoveredAlbum.description}
                 </p>
               )}
               {isAdmin && (
                 <button
                   onClick={() => startEditAlbum(hoveredAlbum)}
-                  className="mt-2 w-full text-center font-body text-xs text-[#C4853A] hover:text-[#D4954A] transition-colors"
+                  className="mt-2 w-full text-center font-body text-xs transition-colors"
+                  style={{ color: C.dot }}
                 >
                   Edit title & description
                 </button>
@@ -584,8 +731,11 @@ export function RoadTimeline({ albums }: RoadTimelineProps) {
       {/* Edit album modal */}
       {editingAlbum && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-rvno-card rounded-lg border border-rvno-border shadow-xl p-5 w-80 max-w-[90vw]">
-            <h3 className="font-display text-lg font-semibold text-rvno-ink mb-4">
+          <div
+            className="rounded-lg shadow-xl p-5 w-80 max-w-[90vw]"
+            style={{ background: C.paper, border: `1px solid ${C.roadEdge}` }}
+          >
+            <h3 className="font-display text-lg font-semibold mb-4" style={{ color: C.ink }}>
               Edit Album
             </h3>
             <div className="space-y-3">
@@ -594,28 +744,40 @@ export function RoadTimeline({ albums }: RoadTimelineProps) {
                 value={editForm.title}
                 onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
                 placeholder="Album title"
-                className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-3 py-2 font-body text-sm text-rvno-ink focus:outline-none focus:border-[#C4853A]/50"
+                className="w-full rounded-lg px-3 py-2 font-body text-sm focus:outline-none"
+                style={{
+                  background: C.road,
+                  border: `1px solid ${C.roadEdge}`,
+                  color: C.ink,
+                }}
               />
               <textarea
                 value={editForm.description}
                 onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
                 placeholder="Description (optional)"
                 rows={3}
-                className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-3 py-2 font-body text-sm text-rvno-ink focus:outline-none focus:border-[#C4853A]/50 resize-none"
+                className="w-full rounded-lg px-3 py-2 font-body text-sm focus:outline-none resize-none"
+                style={{
+                  background: C.road,
+                  border: `1px solid ${C.roadEdge}`,
+                  color: C.ink,
+                }}
               />
             </div>
             <div className="flex justify-end gap-3 mt-4">
               <button
                 onClick={cancelEditAlbum}
                 disabled={saving}
-                className="font-body text-sm text-rvno-ink-dim hover:text-rvno-ink transition-colors px-3 py-2 disabled:opacity-50"
+                className="font-body text-sm transition-colors px-3 py-2 disabled:opacity-50"
+                style={{ color: C.inkMuted }}
               >
                 Cancel
               </button>
               <button
                 onClick={saveAlbumDetails}
                 disabled={saving || !editForm.title}
-                className="bg-[#C4853A] hover:bg-[#B37832] text-white font-body text-sm font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+                className="font-body text-sm font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+                style={{ background: C.dot, color: C.paper }}
               >
                 {saving ? "Saving..." : "Save"}
               </button>
@@ -625,9 +787,4 @@ export function RoadTimeline({ albums }: RoadTimelineProps) {
       )}
     </div>
   );
-}
-
-function formatDate(dateStr: string) {
-  const d = new Date(dateStr + "T00:00:00");
-  return d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
 }

@@ -16,23 +16,19 @@ const mapContainerStyle = {
 // Default center: Roanoke Valley
 const defaultCenter = { lat: 37.27, lng: -79.94 };
 
-// Dark workshop map style (matching AlbumMap)
+// Sepia Atlas vintage map style - warm WW2-era nostalgic feel
 const mapStyles = [
-  { elementType: "geometry", stylers: [{ color: "#2A2A2E" }] },
-  { elementType: "labels.text.stroke", stylers: [{ color: "#1C1C1E" }] },
-  { elementType: "labels.text.fill", stylers: [{ color: "#6B6760" }] },
-  { featureType: "administrative", elementType: "geometry.stroke", stylers: [{ color: "#3A3A3E" }] },
-  { featureType: "administrative.land_parcel", elementType: "labels.text.fill", stylers: [{ color: "#6B6760" }] },
-  { featureType: "poi", elementType: "geometry", stylers: [{ color: "#323236" }] },
-  { featureType: "poi", elementType: "labels.text.fill", stylers: [{ color: "#6B6760" }] },
-  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#2A3A2E" }] },
-  { featureType: "road", elementType: "geometry", stylers: [{ color: "#3A3A3E" }] },
-  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#2A2A2E" }] },
-  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#4A4A4E" }] },
-  { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ color: "#3A3A3E" }] },
-  { featureType: "transit", elementType: "geometry", stylers: [{ color: "#323236" }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#1C2428" }] },
-  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#4AABB8" }] },
+  { featureType: "all", elementType: "geometry", stylers: [{ color: "#e5ba63" }] },
+  { featureType: "all", elementType: "labels.text.fill", stylers: [{ gamma: 0.01 }, { lightness: 20 }] },
+  { featureType: "all", elementType: "labels.text.stroke", stylers: [{ saturation: -31 }, { lightness: -33 }, { weight: 2 }, { gamma: 0.8 }] },
+  { featureType: "all", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+  { featureType: "landscape", elementType: "geometry", stylers: [{ lightness: 30 }, { saturation: 30 }] },
+  { featureType: "poi", elementType: "geometry", stylers: [{ saturation: 20 }] },
+  { featureType: "poi.park", elementType: "geometry", stylers: [{ lightness: 20 }, { saturation: -20 }] },
+  { featureType: "poi.park", elementType: "geometry.fill", stylers: [{ color: "#818b5f" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ lightness: 10 }, { saturation: -30 }] },
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ saturation: 25 }, { lightness: 25 }] },
+  { featureType: "water", elementType: "all", stylers: [{ lightness: -20 }] },
 ];
 
 export function CrewMap({ members }: { members: Member[] }) {
