@@ -1,13 +1,13 @@
 import { supabase } from "@/lib/supabase";
 import { PhotosContent } from "./PhotosContent";
 
-export const revalidate = 60; // Revalidate every 60 seconds
+export const revalidate = 60;
 
 async function getAlbums() {
   const { data: albums } = await supabase
     .from("albums")
     .select("*")
-    .order("event_date", { ascending: true });
+    .order("event_date", { ascending: false });
 
   if (!albums) return [];
 
@@ -27,31 +27,8 @@ async function getAlbums() {
   }));
 }
 
-async function getPhotosWithLocation() {
-  const { data: photos } = await supabase
-    .from("photos")
-    .select("*, location_lat, location_lng")
-    .not("location_lat", "is", null)
-    .not("location_lng", "is", null);
-
-  return photos || [];
-}
-
-async function getMembers() {
-  const { data: members } = await supabase
-    .from("members")
-    .select("*")
-    .order("name", { ascending: true });
-
-  return members || [];
-}
-
 export default async function PhotosPage() {
-  const [albums, photos, members] = await Promise.all([
-    getAlbums(),
-    getPhotosWithLocation(),
-    getMembers(),
-  ]);
+  const albums = await getAlbums();
 
-  return <PhotosContent albums={albums} photos={photos} members={members} />;
+  return <PhotosContent albums={albums} />;
 }

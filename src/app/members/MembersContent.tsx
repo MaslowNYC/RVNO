@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import type { Member } from "@/lib/database.types";
 import { geocodeLocation } from "@/lib/geocode";
+import { CrewMap } from "@/components/CrewMap";
 
 interface MembersContentProps {
   initialMembers: Member[];
@@ -16,6 +17,7 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
   const { isAdmin } = useAuth();
   const router = useRouter();
 
+  const [showMap, setShowMap] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Member>>({});
   const [saving, setSaving] = useState(false);
@@ -204,15 +206,44 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
   return (
     <div className="max-w-4xl mx-auto px-5 py-12">
       <header className="mb-10 text-center">
-        <h1 className="font-display text-3xl font-bold text-rvno-ink mb-2">
-          The Usual Suspects
-        </h1>
-        <p className="font-body text-base text-rvno-ink-muted italic">
-          The people behind the Nortons
+        <div className="flex items-center justify-center gap-3">
+          <h1 className="font-display text-3xl font-bold text-rvno-ink">
+            The Usual Suspects
+          </h1>
+          <button
+            onClick={() => setShowMap(!showMap)}
+            className="relative w-8 h-8 group"
+            title={showMap ? "Show member list" : "Show members on map"}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              className={`w-8 h-8 transition-colors animate-globe-spin ${
+                showMap ? "text-[#C4853A]" : "text-rvno-teal hover:text-[#C4853A]"
+              }`}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+            >
+              {/* Globe */}
+              <circle cx="12" cy="12" r="10" />
+              {/* Latitude lines */}
+              <ellipse cx="12" cy="12" rx="10" ry="4" />
+              <ellipse cx="12" cy="12" rx="10" ry="7" />
+              {/* Longitude line */}
+              <ellipse cx="12" cy="12" rx="4" ry="10" />
+              {/* Center vertical */}
+              <line x1="12" y1="2" x2="12" y2="22" />
+            </svg>
+          </button>
+        </div>
+        <p className="font-body text-base text-rvno-ink-muted italic mt-2">
+          {showMap ? "Where we roam" : "The people behind the Nortons"}
         </p>
       </header>
 
-      {initialMembers.length === 0 && !showAddForm ? (
+      {showMap ? (
+        <CrewMap members={initialMembers} />
+      ) : initialMembers.length === 0 && !showAddForm ? (
         <div className="text-center">
           <p className="font-body text-base text-rvno-ink-dim mb-4">
             Member profiles coming soon. We&apos;re still finding our good sides.
