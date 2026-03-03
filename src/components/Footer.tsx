@@ -12,7 +12,7 @@ export function Footer() {
           </p>
         </div>
 
-        <div className="flex gap-8">
+        <div className="flex flex-wrap justify-center md:justify-start gap-4 sm:gap-8">
           {[
             { href: "/about", label: "About" },
             { href: "/members", label: "The Crew" },

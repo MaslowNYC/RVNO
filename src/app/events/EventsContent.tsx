@@ -187,7 +187,7 @@ export function EventsContent({ initialEvents }: EventsContentProps) {
                     placeholder="Event title"
                     className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-4 py-3 font-display text-xl font-semibold text-rvno-ink focus:outline-none focus:border-[#C4853A]/50"
                   />
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <input
                       type="text"
                       value={editForm.event_date || ""}
@@ -331,7 +331,7 @@ export function EventsContent({ initialEvents }: EventsContentProps) {
                 placeholder="Event title"
                 className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-4 py-3 font-display text-xl font-semibold text-rvno-ink focus:outline-none focus:border-[#C4853A]/50"
               />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <input
                   type="text"
                   value={newEvent.event_date || ""}
