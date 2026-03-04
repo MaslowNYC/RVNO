@@ -18,8 +18,8 @@ export function MissionContent({ imageCaption }: MissionContentProps) {
         <Image
           src="/Dumbfuckery.jpeg"
           alt="Mission Statement"
-          width={800}
-          height={600}
+          width={400}
+          height={300}
           className="rounded-lg shadow-lg"
         />
         <EditableCaption
