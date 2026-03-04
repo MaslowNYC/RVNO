@@ -33,7 +33,7 @@ export function MissionContent({ imageCaption }: MissionContentProps) {
 
       {/* Theme Song */}
       <div className="mt-12 flex flex-col items-center gap-3">
-        <h2 className="font-display text-2xl text-rvno-ink">Theme Song</h2>
+        <h2 className="font-display text-4xl text-rvno-ink">Theme Song</h2>
         <iframe
           src="https://open.spotify.com/embed/track/11OFYsUK9EVJsQ6nutH32M?utm_source=generator&theme=0"
           width="100%"

@@ -10,8 +10,6 @@ const NAV_ITEMS = [
   { href: "/mission", label: "Mission" },
   { href: "/members", label: "The Crew" },
   { href: "/photos", label: "Photos" },
-  { href: "/events", label: "Events" },
-  { href: "/resources", label: "Norton Stuff" },
   { href: "/contact", label: "Contact" },
 ];
 
