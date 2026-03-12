@@ -73,7 +73,7 @@ export function EditableCaption({
           <button
             onClick={handleSave}
             disabled={saving}
-            className="bg-[#C4853A] hover:bg-[#B37832] text-white font-body text-xs font-semibold px-3 py-1.5 rounded transition-colors disabled:opacity-50"
+            className="bg-[#BB0000] hover:bg-[#9E0000] text-gray-100 font-body text-xs font-semibold px-3 py-1.5 rounded transition-colors disabled:opacity-50"
           >
             {saving ? "..." : "Save"}
           </button>

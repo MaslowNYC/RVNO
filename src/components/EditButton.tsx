@@ -13,7 +13,7 @@ export function EditButton({ onClick, className = "" }: EditButtonProps) {
         e.preventDefault();
         onClick(e);
       }}
-      className={`w-11 h-11 rounded-full bg-[#C4853A] hover:bg-[#B37832] text-white flex items-center justify-center shadow-md transition-colors ${className}`}
+      className={`w-11 h-11 rounded-full bg-[#BB0000] hover:bg-[#9E0000] text-gray-100 flex items-center justify-center shadow-md transition-colors ${className}`}
       aria-label="Edit"
     >
       <svg

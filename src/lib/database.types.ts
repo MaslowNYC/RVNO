@@ -9,6 +9,7 @@ export type Album = {
   cover_photo_url: string | null;
   offset_x: number | null;
   offset_y: number | null;
+  sort_order: number | null;
   created_at: string;
   updated_at: string;
 };
@@ -53,6 +54,7 @@ export type AlbumInsert = {
   cover_photo_url?: string | null;
   offset_x?: number | null;
   offset_y?: number | null;
+  sort_order?: number | null;
 };
 
 export type PhotoInsert = {
@@ -136,6 +138,20 @@ export type ResourceInsert = {
   sort_order?: number;
 };
 
+export type NavItem = {
+  id: string;
+  href: string;
+  label: string;
+  sort_order: number;
+  created_at: string;
+};
+
+export type NavItemInsert = {
+  href: string;
+  label: string;
+  sort_order?: number;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -180,6 +196,12 @@ export type Database = {
         Row: Resource;
         Insert: ResourceInsert;
         Update: Partial<ResourceInsert>;
+        Relationships: [];
+      };
+      nav_items: {
+        Row: NavItem;
+        Insert: NavItemInsert;
+        Update: Partial<NavItemInsert>;
         Relationships: [];
       };
     };

@@ -312,10 +312,10 @@ export function CrewMap({ members }: { members: Member[] }) {
                     style={{
                       marginTop: "8px",
                       padding: "4px 8px",
-                      background: "#C4853A",
+                      background: "#BB0000",
                       border: "none",
                       borderRadius: "3px",
-                      color: "#1C1C1E",
+                      color: "#E5E7EB",
                       fontSize: "10px",
                       fontWeight: 600,
                       cursor: "pointer",
@@ -383,7 +383,7 @@ export function CrewMap({ members }: { members: Member[] }) {
               <button
                 onClick={saveMemberDetails}
                 disabled={saving || !editForm.name}
-                className="bg-[#C4853A] hover:bg-[#B37832] text-white font-body text-sm font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+                className="bg-[#BB0000] hover:bg-[#9E0000] text-gray-100 font-body text-sm font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
               >
                 {saving ? "Saving..." : "Save"}
               </button>

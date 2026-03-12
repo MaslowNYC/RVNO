@@ -3,19 +3,35 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 
-const NAV_ITEMS = [
-  { href: "/", label: "Home" },
-  { href: "/about", label: "About" },
-  { href: "/mission", label: "Mission" },
-  { href: "/members", label: "The Crew" },
-  { href: "/photos", label: "Photos" },
-  { href: "/contact", label: "Contact" },
+const DEFAULT_navItems = [
+  { href: "/", label: "Home", sort_order: 0 },
+  { href: "/about", label: "About", sort_order: 1 },
+  { href: "/mission", label: "Mission/Theme Song", sort_order: 2 },
+  { href: "/members", label: "The Crew", sort_order: 3 },
+  { href: "/photos", label: "Photos", sort_order: 4 },
+  { href: "/contact", label: "Contact", sort_order: 5 },
 ];
 
 export function Header() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [navItems, setNavItems] = useState(DEFAULT_navItems);
+
+  // Load nav items from database
+  useEffect(() => {
+    async function loadNavItems() {
+      const { data } = await supabase
+        .from("nav_items")
+        .select("*")
+        .order("sort_order", { ascending: true });
+      if (data && data.length > 0) {
+        setNavItems(data);
+      }
+    }
+    loadNavItems();
+  }, []);
 
   // Close menu on route change
   useEffect(() => {
@@ -50,7 +66,7 @@ export function Header() {
 
         {/* Desktop navigation */}
         <nav className="hidden md:flex items-center gap-8">
-          {NAV_ITEMS.map((item) => (
+          {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
@@ -126,7 +142,7 @@ export function Header() {
         }`}
       >
         <div className="flex flex-col py-4">
-          {NAV_ITEMS.map((item) => (
+          {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}

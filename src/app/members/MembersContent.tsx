@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useAuth } from "@/lib/AuthContext";
 import { EditButton } from "@/components/EditButton";
 import { supabase } from "@/lib/supabase";
@@ -17,12 +17,17 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
   const { isAdmin } = useAuth();
   const router = useRouter();
 
+  const [members, setMembers] = useState(initialMembers);
   const [showMap, setShowMap] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Member>>({});
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [isReordering, setIsReordering] = useState(false);
+  const [hasOrderChanges, setHasOrderChanges] = useState(false);
+  const dragItem = useRef<number | null>(null);
+  const dragOverItem = useRef<number | null>(null);
   const [newMember, setNewMember] = useState<Partial<Member>>({
     name: "",
     title: "",
@@ -131,31 +136,47 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
     router.refresh();
   }
 
-  async function moveMember(memberId: string, direction: "up" | "down") {
-    const currentIndex = initialMembers.findIndex((m) => m.id === memberId);
-    if (currentIndex === -1) return;
+  function handleDragStart(index: number) {
+    dragItem.current = index;
+  }
 
-    const targetIndex =
-      direction === "up" ? currentIndex - 1 : currentIndex + 1;
+  function handleDragEnter(index: number) {
+    dragOverItem.current = index;
+  }
 
-    if (targetIndex < 0 || targetIndex >= initialMembers.length) return;
+  function handleDragEnd() {
+    if (dragItem.current === null || dragOverItem.current === null) return;
+    if (dragItem.current === dragOverItem.current) return;
 
-    const currentMember = initialMembers[currentIndex];
-    const targetMember = initialMembers[targetIndex];
+    const newMembers = [...members];
+    const draggedMember = newMembers[dragItem.current];
+    newMembers.splice(dragItem.current, 1);
+    newMembers.splice(dragOverItem.current, 0, draggedMember);
 
-    // Swap sort_order values
-    await Promise.all([
-      supabase
+    setMembers(newMembers);
+    setHasOrderChanges(true);
+    dragItem.current = null;
+    dragOverItem.current = null;
+  }
+
+  async function saveOrder() {
+    setSaving(true);
+    for (let i = 0; i < members.length; i++) {
+      await supabase
         .from("members")
-        .update({ sort_order: targetMember.sort_order })
-        .eq("id", currentMember.id),
-      supabase
-        .from("members")
-        .update({ sort_order: currentMember.sort_order })
-        .eq("id", targetMember.id),
-    ]);
-
+        .update({ sort_order: i })
+        .eq("id", members[i].id);
+    }
+    setSaving(false);
+    setHasOrderChanges(false);
+    setIsReordering(false);
     router.refresh();
+  }
+
+  function cancelReorder() {
+    setMembers(initialMembers);
+    setHasOrderChanges(false);
+    setIsReordering(false);
   }
 
   async function addMember() {
@@ -180,7 +201,7 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
       country: newMember.country || null,
       location_lat: coords?.lat ?? null,
       location_lng: coords?.lng ?? null,
-      sort_order: initialMembers.length,
+      sort_order: members.length,
       is_crew: true,
     });
     setSaving(false);
@@ -239,11 +260,43 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
         <p className="font-body text-base text-rvno-ink-muted italic mt-2">
           {showMap ? "Where we roam" : "The people behind the Nortons"}
         </p>
+        {isAdmin && !showMap && members.length > 1 && (
+          <div className="mt-4">
+            {isReordering ? (
+              <div className="flex items-center justify-center gap-3">
+                <p className="font-body text-sm text-rvno-ink-dim">
+                  Drag members to reorder
+                </p>
+                <button
+                  onClick={cancelReorder}
+                  disabled={saving}
+                  className="font-body text-sm text-rvno-ink-dim hover:text-rvno-ink transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={saveOrder}
+                  disabled={saving || !hasOrderChanges}
+                  className="bg-[#BB0000] text-gray-100 font-mono text-xs font-semibold px-3 py-1.5 rounded hover:bg-[#9E0000] transition-colors disabled:opacity-50"
+                >
+                  {saving ? "Saving..." : "Save Order"}
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setIsReordering(true)}
+                className="font-body text-sm font-semibold text-gray-100 bg-[#BB0000] hover:bg-[#9E0000] transition-colors px-4 py-2 rounded-lg"
+              >
+                Reorder Members
+              </button>
+            )}
+          </div>
+        )}
       </header>
 
       {showMap ? (
-        <CrewMap members={initialMembers} />
-      ) : initialMembers.length === 0 && !showAddForm ? (
+        <CrewMap members={members} />
+      ) : members.length === 0 && !showAddForm ? (
         <div className="text-center">
           <p className="font-body text-base text-rvno-ink-dim mb-4">
             Member profiles coming soon. We&apos;re still finding our good sides.
@@ -251,7 +304,7 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
           {isAdmin && (
             <button
               onClick={() => setShowAddForm(true)}
-              className="font-body text-base text-[#C4853A] hover:text-[#B37832] transition-colors"
+              className="font-body text-base text-[#BB0000] hover:text-[#9E0000] transition-colors"
             >
               + Add the first member
             </button>
@@ -259,8 +312,16 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {initialMembers.map((member) => (
-            <div key={member.id} className="relative group">
+          {members.map((member, index) => (
+            <div
+              key={member.id}
+              className="relative group"
+              draggable={isReordering}
+              onDragStart={() => isReordering && handleDragStart(index)}
+              onDragEnter={() => isReordering && handleDragEnter(index)}
+              onDragEnd={() => isReordering && handleDragEnd()}
+              onDragOver={(e) => isReordering && e.preventDefault()}
+            >
               {editingId === member.id ? (
                 <div className="bg-rvno-card rounded-lg border-2 border-[#C4853A]/30 p-5 ring-1 ring-[#C4853A]/30">
                   <div className="space-y-3">
@@ -378,7 +439,7 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
                       <button
                         onClick={saveMember}
                         disabled={saving}
-                        className="bg-[#C4853A] hover:bg-[#B37832] text-white font-body text-sm font-semibold px-4 py-2 rounded-lg min-h-[44px] transition-colors disabled:opacity-50"
+                        className="bg-[#BB0000] hover:bg-[#9E0000] text-gray-100 font-body text-sm font-semibold px-4 py-2 rounded-lg min-h-[44px] transition-colors disabled:opacity-50"
                       >
                         {saving ? "Saving..." : "Save"}
                       </button>
@@ -386,7 +447,30 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
                   </div>
                 </div>
               ) : (
-                <div className="bg-rvno-card rounded-lg border-2 border-rvno-border p-5 flex gap-4 items-start">
+                <div className={`bg-rvno-card rounded-lg border-2 p-5 flex gap-4 items-start ${
+                  isReordering
+                    ? "border-rvno-teal/50 cursor-grab active:cursor-grabbing hover:border-rvno-teal"
+                    : "border-rvno-border"
+                }`}>
+                  {isReordering && (
+                    <div className="flex-shrink-0 text-rvno-ink-dim self-center">
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <circle cx="9" cy="6" r="1.5" fill="currentColor" />
+                        <circle cx="15" cy="6" r="1.5" fill="currentColor" />
+                        <circle cx="9" cy="12" r="1.5" fill="currentColor" />
+                        <circle cx="15" cy="12" r="1.5" fill="currentColor" />
+                        <circle cx="9" cy="18" r="1.5" fill="currentColor" />
+                        <circle cx="15" cy="18" r="1.5" fill="currentColor" />
+                      </svg>
+                    </div>
+                  )}
                   <div className="w-16 h-16 rounded-full bg-rvno-surface flex-shrink-0 flex items-center justify-center overflow-hidden">
                     {member.photo_url ? (
                       <img
@@ -430,55 +514,8 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
                     )}
                   </div>
 
-                  {isAdmin && (
-                    <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-                      <div className="flex flex-col">
-                        <button
-                          onClick={() => moveMember(member.id, "up")}
-                          disabled={
-                            initialMembers.findIndex((m) => m.id === member.id) === 0
-                          }
-                          className="p-1 text-rvno-ink-dim hover:text-rvno-ink disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                          title="Move up"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="14"
-                            height="14"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <polyline points="18 15 12 9 6 15" />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={() => moveMember(member.id, "down")}
-                          disabled={
-                            initialMembers.findIndex((m) => m.id === member.id) ===
-                            initialMembers.length - 1
-                          }
-                          className="p-1 text-rvno-ink-dim hover:text-rvno-ink disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                          title="Move down"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="14"
-                            height="14"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <polyline points="6 9 12 15 18 9" />
-                          </svg>
-                        </button>
-                      </div>
+                  {isAdmin && !isReordering && (
+                    <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <EditButton onClick={() => startEdit(member)} />
                     </div>
                   )}
@@ -613,7 +650,7 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
                 <button
                   onClick={addMember}
                   disabled={saving || !newMember.name}
-                  className="bg-[#C4853A] hover:bg-[#B37832] text-white font-body text-sm font-semibold px-4 py-2 rounded-lg min-h-[44px] transition-colors disabled:opacity-50"
+                  className="bg-[#BB0000] hover:bg-[#9E0000] text-gray-100 font-body text-sm font-semibold px-4 py-2 rounded-lg min-h-[44px] transition-colors disabled:opacity-50"
                 >
                   {saving ? "Adding..." : "Add Member"}
                 </button>

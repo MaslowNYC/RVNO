@@ -347,8 +347,8 @@ export function AlbumDetail({ album, initialPhotos }: AlbumDetailProps) {
               onClick={() => setEditMode(!editMode)}
               className={`flex items-center gap-2 px-3 py-2 rounded-lg font-body text-sm transition-colors ${
                 editMode
-                  ? "bg-[#C4853A] text-white"
-                  : "bg-rvno-card border border-rvno-border text-rvno-ink-dim hover:text-rvno-ink hover:border-[#C4853A]/50"
+                  ? "bg-[#BB0000] text-gray-100"
+                  : "bg-rvno-card border border-rvno-border text-rvno-ink-dim hover:text-rvno-ink hover:border-[#BB0000]/50"
               }`}
             >
               <svg
@@ -379,7 +379,7 @@ export function AlbumDetail({ album, initialPhotos }: AlbumDetailProps) {
       {/* Admin upload bar */}
       {isAdmin && editMode && (
         <div className="mb-6 p-4 bg-rvno-card rounded-lg border border-[#C4853A]/30">
-          <label className="inline-flex items-center gap-2 bg-[#C4853A] hover:bg-[#B37832] text-white font-body text-sm px-4 py-2 rounded-lg cursor-pointer transition-colors">
+          <label className="inline-flex items-center gap-2 bg-[#BB0000] hover:bg-[#9E0000] text-gray-100 font-body text-sm px-4 py-2 rounded-lg cursor-pointer transition-colors">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="16"
@@ -461,7 +461,7 @@ export function AlbumDetail({ album, initialPhotos }: AlbumDetailProps) {
                   {/* Edit button */}
                   <button
                     onClick={() => setEditingPhoto(photo)}
-                    className="pointer-events-auto absolute top-2 left-2 p-1.5 bg-[#C4853A] rounded text-white hover:bg-[#B37832] transition-colors"
+                    className="pointer-events-auto absolute top-2 left-2 p-1.5 bg-[#BB0000] rounded text-gray-100 hover:bg-[#9E0000] transition-colors"
                     title="Edit photo"
                   >
                     <svg
@@ -517,7 +517,7 @@ export function AlbumDetail({ album, initialPhotos }: AlbumDetailProps) {
                     <button
                       onClick={() => saveCaption(photo.id)}
                       disabled={saving}
-                      className="px-2 py-1 bg-[#C4853A] hover:bg-[#B37832] text-white font-body text-xs rounded transition-colors disabled:opacity-50"
+                      className="px-2 py-1 bg-[#BB0000] hover:bg-[#9E0000] text-gray-100 font-body text-xs rounded transition-colors disabled:opacity-50"
                     >
                       {saving ? "..." : "Save"}
                     </button>
@@ -868,7 +868,7 @@ function PhotoEditModal({
             <button
               onClick={handleSave}
               disabled={saving}
-              className="bg-[#C4853A] hover:bg-[#B37832] text-white font-mono text-xs px-4 py-2 rounded hover:bg-rvno-teal transition-colors disabled:opacity-50"
+              className="bg-[#BB0000] hover:bg-[#9E0000] text-gray-100 font-mono text-xs px-4 py-2 rounded transition-colors disabled:opacity-50"
             >
               {saving ? "Saving..." : "Save"}
             </button>

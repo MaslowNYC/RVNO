@@ -260,7 +260,7 @@ export function EventsContent({ initialEvents }: EventsContentProps) {
                     <button
                       onClick={saveEvent}
                       disabled={saving}
-                      className="bg-[#C4853A] hover:bg-[#B37832] text-white font-body text-sm font-semibold px-4 py-2 rounded-lg min-h-[44px] transition-colors disabled:opacity-50"
+                      className="bg-[#BB0000] hover:bg-[#9E0000] text-gray-100 font-body text-sm font-semibold px-4 py-2 rounded-lg min-h-[44px] transition-colors disabled:opacity-50"
                     >
                       {saving ? "Saving..." : "Save"}
                     </button>
@@ -394,7 +394,7 @@ export function EventsContent({ initialEvents }: EventsContentProps) {
               <button
                 onClick={addEvent}
                 disabled={saving || !newEvent.title || !newEvent.event_date}
-                className="bg-[#C4853A] hover:bg-[#B37832] text-white font-body text-sm font-semibold px-4 py-2 rounded-lg min-h-[44px] transition-colors disabled:opacity-50"
+                className="bg-[#BB0000] hover:bg-[#9E0000] text-gray-100 font-body text-sm font-semibold px-4 py-2 rounded-lg min-h-[44px] transition-colors disabled:opacity-50"
               >
                 {saving ? "Adding..." : "Add Event"}
               </button>

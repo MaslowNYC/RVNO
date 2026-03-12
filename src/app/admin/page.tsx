@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/AuthContext";
 import type { Album, Photo } from "@/lib/database.types";
 import Link from "next/link";
+import { NavReorder } from "@/components/NavReorder";
 
 export default function AdminPage() {
   const { session, loading } = useAuth();
@@ -79,7 +80,7 @@ export default function AdminPage() {
           )}
           <button
             type="submit"
-            className="w-full bg-rvno-teal-dark text-rvno-white font-mono text-sm py-2.5 rounded hover:bg-rvno-teal transition-colors"
+            className="w-full bg-[#BB0000] text-gray-100 font-mono text-sm font-semibold py-2.5 rounded hover:bg-[#9E0000] transition-colors"
           >
             Sign In
           </button>
@@ -118,6 +119,16 @@ export default function AdminPage() {
       </div>
 
       <h2 className="font-display text-lg font-semibold text-rvno-ink mb-4">
+        Site Navigation
+      </h2>
+      <p className="font-body text-sm text-rvno-ink-muted mb-4">
+        Drag to reorder navigation links. Changes take effect site-wide.
+      </p>
+      <div className="mb-8">
+        <NavReorder />
+      </div>
+
+      <h2 className="font-display text-lg font-semibold text-rvno-ink mb-4">
         Album Management
       </h2>
       <p className="font-body text-sm text-rvno-ink-muted mb-4">
@@ -126,7 +137,7 @@ export default function AdminPage() {
 
       <button
         onClick={() => setShowNewAlbum(!showNewAlbum)}
-        className="mb-6 bg-rvno-teal text-white font-body text-base font-semibold px-6 py-3 rounded-lg min-h-[48px] hover:bg-rvno-teal transition-colors"
+        className="mb-6 bg-[#BB0000] text-gray-100 font-body text-base font-semibold px-6 py-3 rounded-lg min-h-[48px] hover:bg-[#9E0000] transition-colors"
       >
         + New Album
       </button>
@@ -242,7 +253,7 @@ function NewAlbumForm({ onCreated }: { onCreated: () => void }) {
       <button
         type="submit"
         disabled={saving}
-        className="bg-rvno-teal text-white font-body text-base font-semibold px-6 py-3 rounded-lg min-h-[48px] hover:bg-rvno-teal transition-colors disabled:opacity-50"
+        className="bg-[#BB0000] text-gray-100 font-body text-base font-semibold px-6 py-3 rounded-lg min-h-[48px] hover:bg-[#9E0000] transition-colors disabled:opacity-50"
       >
         {saving ? "Creating..." : "Create Album"}
       </button>
@@ -269,6 +280,28 @@ function AlbumRow({
       .eq("album_id", album.id)
       .order("sort_order", { ascending: true });
     if (data) setPhotos(data);
+  }
+
+  function isHeicFile(file: File): boolean {
+    const name = file.name.toLowerCase();
+    return (
+      name.endsWith(".heic") ||
+      name.endsWith(".heif") ||
+      file.type === "image/heic" ||
+      file.type === "image/heif"
+    );
+  }
+
+  async function convertHeicToJpeg(file: File): Promise<File> {
+    const heic2any = (await import("heic2any")).default;
+    const blob = await heic2any({
+      blob: file,
+      toType: "image/jpeg",
+      quality: 0.9,
+    });
+    const resultBlob = Array.isArray(blob) ? blob[0] : blob;
+    const newName = file.name.replace(/\.heic$/i, ".jpg").replace(/\.heif$/i, ".jpg");
+    return new File([resultBlob], newName, { type: "image/jpeg" });
   }
 
   async function extractGPSAndDate(file: File): Promise<{
@@ -310,11 +343,25 @@ function AlbumRow({
     let firstGPS: { lat: number; lng: number } | null = null;
 
     for (let i = 0; i < files.length; i++) {
-      const file = files[i];
+      let file = files[i];
+
+      // Convert HEIC/HEIF to JPEG for browser compatibility
+      let preservedExif: { lat: number | null; lng: number | null; takenAt: string | null } | null = null;
+      if (isHeicFile(file)) {
+        try {
+          // Extract EXIF before conversion (heic2any may lose metadata)
+          preservedExif = await extractGPSAndDate(file);
+          file = await convertHeicToJpeg(file);
+        } catch (err) {
+          console.error("HEIC conversion error:", err);
+          continue;
+        }
+      }
+
       const ext = file.name.split(".").pop();
       const fileName = `${album.id}/${Date.now()}-${i}.${ext}`;
 
-      const { lat, lng, takenAt } = await extractGPSAndDate(file);
+      const { lat, lng, takenAt } = preservedExif || await extractGPSAndDate(file);
 
       if (i === 0 && lat && lng) {
         firstGPS = { lat, lng };
@@ -442,7 +489,7 @@ function AlbumRow({
             {uploading ? "Uploading..." : "+ Add Photos"}
             <input
               type="file"
-              accept="image/*"
+              accept="image/*,.heic,.heif"
               multiple
               onChange={handlePhotoUpload}
               className="hidden"
@@ -630,7 +677,7 @@ function PhotoEditModal({
             <button
               onClick={handleSave}
               disabled={saving}
-              className="bg-rvno-teal-dark text-rvno-white font-mono text-xs px-3 py-1.5 rounded hover:bg-rvno-teal transition-colors disabled:opacity-50"
+              className="bg-[#BB0000] text-gray-100 font-mono text-xs font-semibold px-3 py-1.5 rounded hover:bg-[#9E0000] transition-colors disabled:opacity-50"
             >
               {saving ? "Saving..." : "Save"}
             </button>
