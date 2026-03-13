@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/AuthContext";
 import { supabase } from "@/lib/supabase";
@@ -122,6 +122,11 @@ export function AlbumDetail({ album, initialPhotos }: AlbumDetailProps) {
   const [uploading, setUploading] = useState(false);
   const [editingPhoto, setEditingPhoto] = useState<Photo | null>(null);
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
+
+  // Photo reordering state
+  const [isReorderingPhotos, setIsReorderingPhotos] = useState(false);
+  const [hasPhotoOrderChanges, setHasPhotoOrderChanges] = useState(false);
+  const [savingPhotoOrder, setSavingPhotoOrder] = useState(false);
 
   const openLightbox = (index: number) => {
     setLightboxIndex(index);
@@ -294,6 +299,26 @@ export function AlbumDetail({ album, initialPhotos }: AlbumDetailProps) {
     loadPhotos();
   };
 
+  async function savePhotoOrder() {
+    setSavingPhotoOrder(true);
+    for (let i = 0; i < photos.length; i++) {
+      await supabase
+        .from("photos")
+        .update({ sort_order: i })
+        .eq("id", photos[i].id);
+    }
+    setSavingPhotoOrder(false);
+    setHasPhotoOrderChanges(false);
+    setIsReorderingPhotos(false);
+    router.refresh();
+  }
+
+  function cancelPhotoReorder() {
+    setPhotos(initialPhotos);
+    setHasPhotoOrderChanges(false);
+    setIsReorderingPhotos(false);
+  }
+
   // Handle keyboard navigation in lightbox
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (lightboxIndex === null) return;
@@ -379,32 +404,60 @@ export function AlbumDetail({ album, initialPhotos }: AlbumDetailProps) {
       {/* Admin upload bar */}
       {isAdmin && editMode && (
         <div className="mb-6 p-4 bg-rvno-card rounded-lg border border-[#C4853A]/30">
-          <label className="inline-flex items-center gap-2 bg-[#BB0000] hover:bg-[#9E0000] text-gray-100 font-body text-sm px-4 py-2 rounded-lg cursor-pointer transition-colors">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="17 8 12 3 7 8" />
-              <line x1="12" y1="3" x2="12" y2="15" />
-            </svg>
-            {uploading ? "Uploading..." : "Add Photos"}
-            <input
-              type="file"
-              accept="image/*,.heic,.heif"
-              multiple
-              onChange={handlePhotoUpload}
-              className="hidden"
-              disabled={uploading}
-            />
-          </label>
+          <div className="flex flex-wrap items-center gap-3">
+            <label className="inline-flex items-center gap-2 bg-[#BB0000] hover:bg-[#9E0000] text-gray-100 font-body text-sm px-4 py-2 rounded-lg cursor-pointer transition-colors">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+              {uploading ? "Uploading..." : "Add Photos"}
+              <input
+                type="file"
+                accept="image/*,.heic,.heif"
+                multiple
+                onChange={handlePhotoUpload}
+                className="hidden"
+                disabled={uploading}
+              />
+            </label>
+
+            {/* Reorder Photos Toggle */}
+            {photos.length > 1 && !isReorderingPhotos && (
+              <button
+                onClick={() => setIsReorderingPhotos(true)}
+                className="inline-flex items-center gap-2 bg-[#BB0000] hover:bg-[#9E0000] text-gray-100 font-body text-sm px-4 py-2 rounded-lg transition-colors"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <line x1="3" y1="12" x2="21" y2="12" />
+                  <line x1="3" y1="18" x2="21" y2="18" />
+                </svg>
+                Reorder Photos
+              </button>
+            )}
+
+          </div>
           <p className="font-body text-xs text-rvno-ink-dim mt-2">
             Supports JPG, PNG, HEIC/HEIF. GPS coordinates and date will be extracted automatically.
           </p>
@@ -426,15 +479,21 @@ export function AlbumDetail({ album, initialPhotos }: AlbumDetailProps) {
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {photos.map((photo, index) => (
-            <div key={photo.id} className="group relative">
+            <div
+              key={photo.id}
+              className="group relative"
+            >
               <button
-                onClick={() => editMode ? setEditingPhoto(photo) : openLightbox(index)}
-                className="block w-full aspect-square bg-rvno-surface rounded-lg overflow-hidden border border-rvno-border hover:border-[#C4853A]/50 transition-colors focus:outline-none focus:ring-2 focus:ring-[#C4853A]/50"
+                onClick={() => {
+                  editMode ? setEditingPhoto(photo) : openLightbox(index);
+                }}
+                className="block w-full aspect-square bg-rvno-surface rounded-lg overflow-hidden transition-colors focus:outline-none focus:ring-2 focus:ring-[#C4853A]/50 border border-rvno-border hover:border-[#C4853A]/50"
               >
                 <img
                   src={photo.url}
                   alt={photo.caption || `Photo ${index + 1}`}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  style={{ transform: `rotate(${photo.rotation || 0}deg)` }}
                 />
               </button>
 
@@ -654,6 +713,7 @@ export function AlbumDetail({ album, initialPhotos }: AlbumDetailProps) {
               src={photos[lightboxIndex].url}
               alt={photos[lightboxIndex].caption || `Photo ${lightboxIndex + 1}`}
               className="max-w-full max-h-[80vh] object-contain"
+              style={{ transform: `rotate(${photos[lightboxIndex].rotation || 0}deg)` }}
             />
             {photos[lightboxIndex].caption && (
               <p className="font-body text-sm text-white/80 mt-4 text-center max-w-lg">
@@ -665,6 +725,19 @@ export function AlbumDetail({ album, initialPhotos }: AlbumDetailProps) {
             </p>
           </div>
         </div>
+      )}
+
+      {/* Photo Reorder Modal */}
+      {isReorderingPhotos && (
+        <PhotoReorderModal
+          photos={photos}
+          setPhotos={setPhotos}
+          onSave={savePhotoOrder}
+          onCancel={cancelPhotoReorder}
+          saving={savingPhotoOrder}
+          hasChanges={hasPhotoOrderChanges}
+          setHasChanges={setHasPhotoOrderChanges}
+        />
       )}
 
       {/* Photo Edit Modal */}
@@ -688,6 +761,182 @@ export function AlbumDetail({ album, initialPhotos }: AlbumDetailProps) {
   );
 }
 
+function PhotoReorderModal({
+  photos,
+  setPhotos,
+  onSave,
+  onCancel,
+  saving,
+  hasChanges,
+  setHasChanges,
+}: {
+  photos: Photo[];
+  setPhotos: (photos: Photo[]) => void;
+  onSave: () => void;
+  onCancel: () => void;
+  saving: boolean;
+  hasChanges: boolean;
+  setHasChanges: (hasChanges: boolean) => void;
+}) {
+  const dragItem = useRef<number | null>(null);
+  const dragOverItem = useRef<number | null>(null);
+
+  function movePhoto(fromIndex: number, toIndex: number) {
+    if (toIndex < 0 || toIndex >= photos.length) return;
+    const newPhotos = [...photos];
+    const [movedPhoto] = newPhotos.splice(fromIndex, 1);
+    newPhotos.splice(toIndex, 0, movedPhoto);
+    setPhotos(newPhotos);
+    setHasChanges(true);
+  }
+
+  function handleDragStart(index: number) {
+    dragItem.current = index;
+  }
+
+  function handleDragEnter(index: number) {
+    dragOverItem.current = index;
+  }
+
+  function handleDragEnd() {
+    if (dragItem.current === null || dragOverItem.current === null) return;
+    if (dragItem.current === dragOverItem.current) return;
+    movePhoto(dragItem.current, dragOverItem.current);
+    dragItem.current = null;
+    dragOverItem.current = null;
+  }
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
+      onClick={onCancel}
+    >
+      <div
+        className="bg-rvno-elevated rounded-lg border border-rvno-border max-w-lg w-full max-h-[85vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="p-4 border-b border-rvno-border flex items-center justify-between">
+          <div>
+            <h3 className="font-display text-lg font-semibold text-rvno-ink">
+              Reorder Photos
+            </h3>
+            <p className="font-body text-sm text-rvno-ink-dim mt-0.5">
+              Drag or use arrows to reorder
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={onCancel}
+              disabled={saving}
+              className="font-body text-sm text-rvno-ink-dim hover:text-rvno-ink px-3 py-1.5"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onSave}
+              disabled={saving || !hasChanges}
+              className="bg-[#BB0000] text-gray-100 font-mono text-xs font-semibold px-4 py-2 rounded hover:bg-[#9E0000] transition-colors disabled:opacity-50"
+            >
+              {saving ? "Saving..." : "Save Order"}
+            </button>
+          </div>
+        </div>
+
+        {/* Photo list */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-2">
+          {photos.map((photo, index) => (
+            <div
+              key={photo.id}
+              draggable
+              onDragStart={() => handleDragStart(index)}
+              onDragEnter={() => handleDragEnter(index)}
+              onDragEnd={handleDragEnd}
+              onDragOver={(e) => e.preventDefault()}
+              className="flex items-center gap-3 bg-rvno-card border border-rvno-border rounded-lg p-2 cursor-grab active:cursor-grabbing hover:border-[#BB0000]/50 transition-colors"
+            >
+              {/* Drag handle */}
+              <span className="text-rvno-ink-dim flex-shrink-0">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <circle cx="9" cy="6" r="1.5" fill="currentColor" />
+                  <circle cx="15" cy="6" r="1.5" fill="currentColor" />
+                  <circle cx="9" cy="12" r="1.5" fill="currentColor" />
+                  <circle cx="15" cy="12" r="1.5" fill="currentColor" />
+                  <circle cx="9" cy="18" r="1.5" fill="currentColor" />
+                  <circle cx="15" cy="18" r="1.5" fill="currentColor" />
+                </svg>
+              </span>
+
+              {/* Position number */}
+              <span className="font-mono text-sm font-bold text-rvno-ink w-6 text-center flex-shrink-0">
+                {index + 1}
+              </span>
+
+              {/* Thumbnail */}
+              <img
+                src={photo.url}
+                alt={photo.caption || `Photo ${index + 1}`}
+                className="w-16 h-16 object-cover rounded flex-shrink-0"
+                style={{ transform: `rotate(${photo.rotation || 0}deg)` }}
+              />
+
+              {/* Caption */}
+              <span className="flex-1 font-body text-sm text-rvno-ink-dim truncate min-w-0">
+                {photo.caption || "No caption"}
+              </span>
+
+              {/* Move buttons */}
+              <div className="flex flex-col gap-1 flex-shrink-0">
+                <button
+                  onClick={() => movePhoto(index, index - 1)}
+                  disabled={index === 0}
+                  className="p-1 rounded bg-rvno-surface hover:bg-[#BB0000] hover:text-white disabled:opacity-30 disabled:hover:bg-rvno-surface disabled:hover:text-current transition-colors"
+                  title="Move up"
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <polyline points="18 15 12 9 6 15" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => movePhoto(index, index + 1)}
+                  disabled={index === photos.length - 1}
+                  className="p-1 rounded bg-rvno-surface hover:bg-[#BB0000] hover:text-white disabled:opacity-30 disabled:hover:bg-rvno-surface disabled:hover:text-current transition-colors"
+                  title="Move down"
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function PhotoEditModal({
   photo,
   album,
@@ -707,9 +956,18 @@ function PhotoEditModal({
   const [takenAt, setTakenAt] = useState(
     photo.taken_at ? photo.taken_at.split("T")[0] : ""
   );
+  const [rotation, setRotation] = useState(photo.rotation || 0);
   const [saving, setSaving] = useState(false);
 
   const isCover = album.cover_photo_url === photo.url;
+
+  function rotateLeft() {
+    setRotation((prev) => (prev - 90 + 360) % 360);
+  }
+
+  function rotateRight() {
+    setRotation((prev) => (prev + 90) % 360);
+  }
 
   async function handleSave() {
     setSaving(true);
@@ -717,6 +975,7 @@ function PhotoEditModal({
       .from("photos")
       .update({
         caption: caption || null,
+        rotation: rotation,
         location_lat: lat ? parseFloat(lat) : null,
         location_lng: lng ? parseFloat(lng) : null,
         taken_at: takenAt ? new Date(takenAt).toISOString() : null,
@@ -746,20 +1005,70 @@ function PhotoEditModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start gap-4 mb-4">
-          <img
-            src={photo.url}
-            alt=""
-            className="w-24 h-24 object-cover rounded"
-          />
+          <div className="relative">
+            <img
+              src={photo.url}
+              alt=""
+              className="w-24 h-24 object-cover rounded"
+              style={{ transform: `rotate(${rotation}deg)` }}
+            />
+          </div>
           <div className="flex-1">
             <h3 className="font-display text-sm font-semibold text-rvno-ink mb-1">
               Edit Photo
             </h3>
-            <p className="font-body text-sm text-rvno-ink-dim">
+            <p className="font-body text-sm text-rvno-ink-dim mb-2">
               {photo.location_lat
                 ? `GPS: ${photo.location_lat.toFixed(4)}, ${photo.location_lng?.toFixed(4)}`
                 : "No GPS data"}
             </p>
+            {/* Rotation controls */}
+            <div className="flex items-center gap-2">
+              <span className="font-body text-xs text-rvno-ink-dim uppercase">Rotate:</span>
+              <button
+                onClick={rotateLeft}
+                className="p-1.5 bg-rvno-card border border-rvno-border rounded hover:border-[#BB0000]/50 transition-colors"
+                title="Rotate left 90°"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-rvno-ink"
+                >
+                  <path d="M2.5 2v6h6M2.66 15.57a10 10 0 1 0 .57-8.38" />
+                </svg>
+              </button>
+              <button
+                onClick={rotateRight}
+                className="p-1.5 bg-rvno-card border border-rvno-border rounded hover:border-[#BB0000]/50 transition-colors"
+                title="Rotate right 90°"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-rvno-ink"
+                >
+                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38" />
+                </svg>
+              </button>
+              {rotation !== 0 && (
+                <span className="font-mono text-xs text-rvno-ink-dim">{rotation}°</span>
+              )}
+            </div>
           </div>
         </div>
 
