@@ -20,6 +20,7 @@ export type Photo = {
   url: string;
   caption: string | null;
   sort_order: number;
+  rotation: number;
   location_lat: number | null;
   location_lng: number | null;
   taken_at: string | null;
@@ -62,6 +63,7 @@ export type PhotoInsert = {
   url: string;
   caption?: string | null;
   sort_order?: number;
+  rotation?: number;
   location_lat?: number | null;
   location_lng?: number | null;
   taken_at?: string | null;
