@@ -75,6 +75,15 @@ export function PhotosContent({ albums: initialAlbums }: PhotosContentProps) {
     setIsReordering(false);
   }
 
+  function moveAlbum(fromIndex: number, toIndex: number) {
+    if (toIndex < 0 || toIndex >= albums.length) return;
+    const newAlbums = [...albums];
+    const [movedAlbum] = newAlbums.splice(fromIndex, 1);
+    newAlbums.splice(toIndex, 0, movedAlbum);
+    setAlbums(newAlbums);
+    setHasChanges(true);
+  }
+
   return (
     <div className="max-w-5xl mx-auto px-5 py-12">
       <header className="mb-10 text-center">
@@ -214,6 +223,52 @@ export function PhotosContent({ albums: initialAlbums }: PhotosContentProps) {
                   className="relative group block bg-rvno-card rounded-lg border-2 border-rvno-teal/50 overflow-hidden cursor-grab active:cursor-grabbing hover:border-rvno-teal transition-colors"
                 >
                   {cardContent}
+                  {/* Inline reorder controls */}
+                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-black/80 rounded-lg px-2 py-1.5 z-10">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); moveAlbum(index, 0); }}
+                      disabled={index === 0}
+                      className="p-1.5 rounded text-white hover:bg-[#BB0000] disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                      title="Move to first"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <polyline points="11 17 6 12 11 7" />
+                        <polyline points="18 17 13 12 18 7" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); moveAlbum(index, index - 1); }}
+                      disabled={index === 0}
+                      className="p-1.5 rounded text-white hover:bg-[#BB0000] disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                      title="Move left"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <polyline points="15 18 9 12 15 6" />
+                      </svg>
+                    </button>
+                    <span className="font-mono text-sm text-white px-1.5">{index + 1}</span>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); moveAlbum(index, index + 1); }}
+                      disabled={index === albums.length - 1}
+                      className="p-1.5 rounded text-white hover:bg-[#BB0000] disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                      title="Move right"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <polyline points="9 18 15 12 9 6" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); moveAlbum(index, albums.length - 1); }}
+                      disabled={index === albums.length - 1}
+                      className="p-1.5 rounded text-white hover:bg-[#BB0000] disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                      title="Move to last"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <polyline points="13 17 18 12 13 7" />
+                        <polyline points="6 17 11 12 6 7" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               );
             }

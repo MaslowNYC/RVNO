@@ -319,6 +319,24 @@ export function AlbumDetail({ album, initialPhotos }: AlbumDetailProps) {
     setIsReorderingPhotos(false);
   }
 
+  // Inline photo reorder (for edit mode)
+  async function inlineMovePhoto(fromIndex: number, toIndex: number) {
+    if (toIndex < 0 || toIndex >= photos.length) return;
+    const newPhotos = [...photos];
+    const [movedPhoto] = newPhotos.splice(fromIndex, 1);
+    newPhotos.splice(toIndex, 0, movedPhoto);
+    setPhotos(newPhotos);
+
+    // Save immediately
+    for (let i = 0; i < newPhotos.length; i++) {
+      await supabase
+        .from("photos")
+        .update({ sort_order: i })
+        .eq("id", newPhotos[i].id);
+    }
+    router.refresh();
+  }
+
   // Handle keyboard navigation in lightbox
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (lightboxIndex === null) return;
@@ -559,6 +577,54 @@ export function AlbumDetail({ album, initialPhotos }: AlbumDetailProps) {
                       <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                     </svg>
                   </button>
+                  {/* Inline reorder controls */}
+                  {photos.length > 1 && (
+                    <div className="pointer-events-auto absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-black/70 rounded-lg px-2 py-1">
+                      <button
+                        onClick={() => inlineMovePhoto(index, 0)}
+                        disabled={index === 0}
+                        className="p-1.5 rounded text-white hover:bg-[#BB0000] disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                        title="Move to first"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <polyline points="11 17 6 12 11 7" />
+                          <polyline points="18 17 13 12 18 7" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => inlineMovePhoto(index, index - 1)}
+                        disabled={index === 0}
+                        className="p-1.5 rounded text-white hover:bg-[#BB0000] disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                        title="Move left"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <polyline points="15 18 9 12 15 6" />
+                        </svg>
+                      </button>
+                      <span className="font-mono text-xs text-white px-1">{index + 1}</span>
+                      <button
+                        onClick={() => inlineMovePhoto(index, index + 1)}
+                        disabled={index === photos.length - 1}
+                        className="p-1.5 rounded text-white hover:bg-[#BB0000] disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                        title="Move right"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <polyline points="9 18 15 12 9 6" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => inlineMovePhoto(index, photos.length - 1)}
+                        disabled={index === photos.length - 1}
+                        className="p-1.5 rounded text-white hover:bg-[#BB0000] disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                        title="Move to last"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <polyline points="13 17 18 12 13 7" />
+                          <polyline points="6 17 11 12 6 7" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -780,6 +846,7 @@ function PhotoReorderModal({
 }) {
   const dragItem = useRef<number | null>(null);
   const dragOverItem = useRef<number | null>(null);
+  const [jumpInputs, setJumpInputs] = useState<{[key: string]: string}>({});
 
   function movePhoto(fromIndex: number, toIndex: number) {
     if (toIndex < 0 || toIndex >= photos.length) return;
@@ -806,13 +873,22 @@ function PhotoReorderModal({
     dragOverItem.current = null;
   }
 
+  function handleJumpToPosition(photoId: string, currentIndex: number) {
+    const inputValue = jumpInputs[photoId];
+    if (!inputValue) return;
+    const targetPosition = parseInt(inputValue, 10);
+    if (isNaN(targetPosition) || targetPosition < 1 || targetPosition > photos.length) return;
+    movePhoto(currentIndex, targetPosition - 1);
+    setJumpInputs(prev => ({ ...prev, [photoId]: '' }));
+  }
+
   return (
     <div
       className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
       onClick={onCancel}
     >
       <div
-        className="bg-rvno-elevated rounded-lg border border-rvno-border max-w-lg w-full max-h-[85vh] flex flex-col"
+        className="bg-rvno-elevated rounded-lg border border-rvno-border max-w-2xl w-full max-h-[85vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -822,21 +898,21 @@ function PhotoReorderModal({
               Reorder Photos
             </h3>
             <p className="font-body text-sm text-rvno-ink-dim mt-0.5">
-              Drag or use arrows to reorder
+              Drag, use arrows, or type a position number
             </p>
           </div>
           <div className="flex gap-2">
             <button
               onClick={onCancel}
               disabled={saving}
-              className="font-body text-sm text-rvno-ink-dim hover:text-rvno-ink px-3 py-1.5"
+              className="font-body text-sm text-rvno-ink-dim hover:text-rvno-ink px-3 py-2"
             >
               Cancel
             </button>
             <button
               onClick={onSave}
               disabled={saving || !hasChanges}
-              className="bg-[#BB0000] text-gray-100 font-mono text-xs font-semibold px-4 py-2 rounded hover:bg-[#9E0000] transition-colors disabled:opacity-50"
+              className="bg-[#BB0000] text-gray-100 font-mono text-sm font-semibold px-5 py-2 rounded hover:bg-[#9E0000] transition-colors disabled:opacity-50"
             >
               {saving ? "Saving..." : "Save Order"}
             </button>
@@ -844,7 +920,7 @@ function PhotoReorderModal({
         </div>
 
         {/* Photo list */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-2">
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {photos.map((photo, index) => (
             <div
               key={photo.id}
@@ -853,13 +929,13 @@ function PhotoReorderModal({
               onDragEnter={() => handleDragEnter(index)}
               onDragEnd={handleDragEnd}
               onDragOver={(e) => e.preventDefault()}
-              className="flex items-center gap-3 bg-rvno-card border border-rvno-border rounded-lg p-2 cursor-grab active:cursor-grabbing hover:border-[#BB0000]/50 transition-colors"
+              className="flex items-center gap-3 bg-rvno-card border border-rvno-border rounded-lg p-3 cursor-grab active:cursor-grabbing hover:border-[#BB0000]/50 transition-colors"
             >
               {/* Drag handle */}
-              <span className="text-rvno-ink-dim flex-shrink-0">
+              <span className="text-rvno-ink-dim flex-shrink-0 touch-none">
                 <svg
-                  width="20"
-                  height="20"
+                  width="24"
+                  height="24"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -874,16 +950,34 @@ function PhotoReorderModal({
                 </svg>
               </span>
 
-              {/* Position number */}
-              <span className="font-mono text-sm font-bold text-rvno-ink w-6 text-center flex-shrink-0">
-                {index + 1}
-              </span>
+              {/* Position number + jump input */}
+              <div className="flex items-center gap-1 flex-shrink-0">
+                <span className="font-mono text-base font-bold text-rvno-ink w-8 text-center">
+                  {index + 1}
+                </span>
+                <input
+                  type="number"
+                  min="1"
+                  max={photos.length}
+                  value={jumpInputs[photo.id] || ''}
+                  onChange={(e) => setJumpInputs(prev => ({ ...prev, [photo.id]: e.target.value }))}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleJumpToPosition(photo.id, index);
+                    }
+                  }}
+                  onBlur={() => handleJumpToPosition(photo.id, index)}
+                  placeholder="#"
+                  className="w-12 bg-rvno-surface border border-rvno-border rounded px-2 py-1 font-mono text-sm text-center text-rvno-ink focus:outline-none focus:border-[#BB0000]/50"
+                  title="Jump to position"
+                />
+              </div>
 
               {/* Thumbnail */}
               <img
                 src={photo.url}
                 alt={photo.caption || `Photo ${index + 1}`}
-                className="w-16 h-16 object-cover rounded flex-shrink-0"
+                className="w-20 h-20 object-cover rounded flex-shrink-0"
                 style={{ transform: `rotate(${photo.rotation || 0}deg)` }}
               />
 
@@ -892,40 +986,52 @@ function PhotoReorderModal({
                 {photo.caption || "No caption"}
               </span>
 
-              {/* Move buttons */}
-              <div className="flex flex-col gap-1 flex-shrink-0">
+              {/* Move buttons - larger for touch */}
+              <div className="flex items-center gap-1 flex-shrink-0">
+                {/* Move to first */}
+                <button
+                  onClick={() => movePhoto(index, 0)}
+                  disabled={index === 0}
+                  className="p-2 rounded bg-rvno-surface hover:bg-[#BB0000] hover:text-white disabled:opacity-30 disabled:hover:bg-rvno-surface disabled:hover:text-current transition-colors"
+                  title="Move to first"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="11 17 6 12 11 7" />
+                    <polyline points="18 17 13 12 18 7" />
+                  </svg>
+                </button>
+                {/* Move up */}
                 <button
                   onClick={() => movePhoto(index, index - 1)}
                   disabled={index === 0}
-                  className="p-1 rounded bg-rvno-surface hover:bg-[#BB0000] hover:text-white disabled:opacity-30 disabled:hover:bg-rvno-surface disabled:hover:text-current transition-colors"
+                  className="p-2 rounded bg-rvno-surface hover:bg-[#BB0000] hover:text-white disabled:opacity-30 disabled:hover:bg-rvno-surface disabled:hover:text-current transition-colors"
                   title="Move up"
                 >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <polyline points="18 15 12 9 6 15" />
                   </svg>
                 </button>
+                {/* Move down */}
                 <button
                   onClick={() => movePhoto(index, index + 1)}
                   disabled={index === photos.length - 1}
-                  className="p-1 rounded bg-rvno-surface hover:bg-[#BB0000] hover:text-white disabled:opacity-30 disabled:hover:bg-rvno-surface disabled:hover:text-current transition-colors"
+                  className="p-2 rounded bg-rvno-surface hover:bg-[#BB0000] hover:text-white disabled:opacity-30 disabled:hover:bg-rvno-surface disabled:hover:text-current transition-colors"
                   title="Move down"
                 >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </button>
+                {/* Move to last */}
+                <button
+                  onClick={() => movePhoto(index, photos.length - 1)}
+                  disabled={index === photos.length - 1}
+                  className="p-2 rounded bg-rvno-surface hover:bg-[#BB0000] hover:text-white disabled:opacity-30 disabled:hover:bg-rvno-surface disabled:hover:text-current transition-colors"
+                  title="Move to last"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="13 17 18 12 13 7" />
+                    <polyline points="6 17 11 12 6 7" />
                   </svg>
                 </button>
               </div>
