@@ -4,6 +4,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Providers } from "@/components/Providers";
 import { AdminToolbar } from "@/components/AdminToolbar";
+import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
   title: "Roanoke Valley Norton Owners",
@@ -34,6 +35,7 @@ export default function RootLayout({
           <Footer />
           <AdminToolbar />
         </Providers>
+        <Analytics />
       </body>
     </html>
   );
