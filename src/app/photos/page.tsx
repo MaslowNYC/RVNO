@@ -1,9 +1,10 @@
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server";
 import { PhotosContent } from "./PhotosContent";
 
 export const revalidate = 60;
 
 async function getAlbums() {
+  const supabase = await createClient();
   const { data: albums } = await supabase
     .from("albums")
     .select("*");

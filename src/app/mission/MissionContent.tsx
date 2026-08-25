@@ -37,7 +37,7 @@ export function MissionContent({ imageCaption }: MissionContentProps) {
         <iframe
           src="https://open.spotify.com/embed/track/11OFYsUK9EVJsQ6nutH32M?utm_source=generator&theme=0"
           width="100%"
-          height="152"
+          height="352"
           allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
           loading="lazy"
           className="rounded-xl max-w-md border-0"

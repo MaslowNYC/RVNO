@@ -1,10 +1,11 @@
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server";
 import { notFound } from "next/navigation";
 import { AlbumDetail } from "./AlbumDetail";
 
 export const revalidate = 60;
 
 async function getAlbum(id: string) {
+  const supabase = await createClient();
   const { data: album } = await supabase
     .from("albums")
     .select("*")
@@ -15,6 +16,7 @@ async function getAlbum(id: string) {
 }
 
 async function getPhotos(albumId: string) {
+  const supabase = await createClient();
   const { data: photos } = await supabase
     .from("photos")
     .select("*")

@@ -1,10 +1,11 @@
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server";
 import { AboutContent } from "./AboutContent";
 import type { PageContent } from "@/lib/database.types";
 
 export const revalidate = 60;
 
 async function getPageContent() {
+  const supabase = await createClient();
   const { data } = await supabase
     .from("page_content")
     .select("*")

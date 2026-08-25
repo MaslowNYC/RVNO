@@ -1,9 +1,10 @@
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server";
 import { HomeContent } from "./HomeContent";
 
 export const revalidate = 60;
 
 async function getPageContent() {
+  const supabase = await createClient();
   const { data } = await supabase
     .from("page_content")
     .select("body")

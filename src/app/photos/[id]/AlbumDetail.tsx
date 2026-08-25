@@ -160,11 +160,16 @@ export function AlbumDetail({ album, initialPhotos }: AlbumDetailProps) {
 
   const saveCaption = async (photoId: string) => {
     setSaving(true);
-    await supabase
+    const { error } = await supabase
       .from("photos")
       .update({ caption: captionText || null })
       .eq("id", photoId);
     setSaving(false);
+    if (error) {
+      console.error("Caption save error:", error);
+      alert("Failed to save caption. Please try logging out and back in.");
+      return;
+    }
     setEditingCaption(null);
     router.refresh();
   };
@@ -1077,7 +1082,7 @@ function PhotoEditModal({
 
   async function handleSave() {
     setSaving(true);
-    await supabase
+    const { error } = await supabase
       .from("photos")
       .update({
         caption: caption || null,
@@ -1088,6 +1093,11 @@ function PhotoEditModal({
       })
       .eq("id", photo.id);
     setSaving(false);
+    if (error) {
+      console.error("Photo save error:", error);
+      alert("Failed to save changes. Please try logging out and back in.");
+      return;
+    }
     onSave();
   }
 

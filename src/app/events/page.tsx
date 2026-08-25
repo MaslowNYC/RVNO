@@ -1,9 +1,10 @@
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server";
 import { EventsContent } from "./EventsContent";
 
 export const revalidate = 60;
 
 async function getEvents() {
+  const supabase = await createClient();
   const { data } = await supabase
     .from("events")
     .select("*")

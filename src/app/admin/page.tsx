@@ -566,7 +566,7 @@ function PhotoEditModal({
 
   async function handleSave() {
     setSaving(true);
-    await supabase
+    const { error } = await supabase
       .from("photos")
       .update({
         caption: caption || null,
@@ -576,12 +576,22 @@ function PhotoEditModal({
       })
       .eq("id", photo.id);
     setSaving(false);
+    if (error) {
+      console.error("Photo save error:", error);
+      alert("Failed to save changes. Please try logging out and back in.");
+      return;
+    }
     onSave();
   }
 
   async function handleDelete() {
     if (!confirm("Delete this photo?")) return;
-    await supabase.from("photos").delete().eq("id", photo.id);
+    const { error } = await supabase.from("photos").delete().eq("id", photo.id);
+    if (error) {
+      console.error("Photo delete error:", error);
+      alert("Failed to delete photo. Please try logging out and back in.");
+      return;
+    }
     onSave();
   }
 
