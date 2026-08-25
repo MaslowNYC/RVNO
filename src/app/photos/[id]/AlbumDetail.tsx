@@ -74,36 +74,25 @@ interface ConversionResult {
 }
 
 async function convertHeicToJpeg(file: File): Promise<ConversionResult> {
-  const formData = new FormData();
-  formData.append("file", file);
+  // Read EXIF from the ORIGINAL file first — heic2any drops metadata during
+  // conversion, so GPS and the date have to come off the HEIC itself.
+  const exifData = await extractGPSAndDate(file);
 
-  const response = await fetch("/api/convert-heif", {
-    method: "POST",
-    body: formData,
+  const heic2any = (await import("heic2any")).default;
+  const blob = await heic2any({
+    blob: file,
+    toType: "image/jpeg",
+    quality: 0.9,
   });
+  const resultBlob = Array.isArray(blob) ? blob[0] : blob;
 
-  if (!response.ok) {
-    throw new Error("Server conversion failed");
-  }
-
-  const data = await response.json();
-  const binaryString = atob(data.jpeg);
-  const bytes = new Uint8Array(binaryString.length);
-  for (let i = 0; i < binaryString.length; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
-  const blob = new Blob([bytes], { type: "image/jpeg" });
-
-  const newName = file.name.replace(/\.heic$/i, ".jpg").replace(/\.heif$/i, ".jpg");
-  const convertedFile = new File([blob], newName, { type: "image/jpeg" });
+  const newName = file.name
+    .replace(/\.heic$/i, ".jpg")
+    .replace(/\.heif$/i, ".jpg");
 
   return {
-    file: convertedFile,
-    exifData: {
-      lat: data.metadata.lat,
-      lng: data.metadata.lng,
-      takenAt: data.metadata.takenAt,
-    },
+    file: new File([resultBlob], newName, { type: "image/jpeg" }),
+    exifData,
   };
 }
 
