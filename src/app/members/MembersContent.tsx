@@ -9,6 +9,7 @@ import type { Member } from "@/lib/database.types";
 import { geocodeLocation } from "@/lib/geocode";
 import { CrewMap } from "@/components/CrewMap";
 import { parseSpotifyTrackId } from "@/lib/spotify";
+import { SpotifyPlayer } from "@/components/SpotifyPlayer";
 
 interface MembersContentProps {
   initialMembers: Member[];
@@ -585,10 +586,27 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
                       </p>
                     )}
                     {member.song_title && (
-                      <p className="font-body text-sm text-rvno-ink-dim mt-1">
-                        🎵 {member.song_title}
-                        {member.song_artist ? ` — ${member.song_artist}` : ""}
-                      </p>
+                      <div className="mt-3">
+                        <p className="font-body text-sm text-rvno-ink-muted">
+                          🎵 <span className="italic">{member.song_title}</span>
+                          {member.song_artist ? ` — ${member.song_artist}` : ""}
+                        </p>
+                        {member.song_note && (
+                          <p className="font-body text-xs text-rvno-ink-dim italic mt-0.5">
+                            {member.song_note}
+                          </p>
+                        )}
+                        {member.song_spotify_id && !isReordering && (
+                          <SpotifyPlayer
+                            trackId={member.song_spotify_id}
+                            variant="compact"
+                            className="mt-2"
+                            title={`${member.song_title}${
+                              member.song_artist ? ` — ${member.song_artist}` : ""
+                            }`}
+                          />
+                        )}
+                      </div>
                     )}
                   </div>
 
