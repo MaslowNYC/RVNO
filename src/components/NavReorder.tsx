@@ -9,8 +9,9 @@ const DEFAULT_NAV_ITEMS: Omit<NavItem, "id" | "created_at">[] = [
   { href: "/about", label: "About", sort_order: 1 },
   { href: "/mission", label: "Mission/Theme Song", sort_order: 2 },
   { href: "/members", label: "The Crew", sort_order: 3 },
-  { href: "/photos", label: "Photos", sort_order: 4 },
-  { href: "/contact", label: "Contact", sort_order: 5 },
+  { href: "/jukebox", label: "Jukebox", sort_order: 4 },
+  { href: "/photos", label: "Photos", sort_order: 5 },
+  { href: "/contact", label: "Contact", sort_order: 6 },
 ];
 
 type NavItemWithId = {

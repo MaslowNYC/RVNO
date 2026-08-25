@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import type { Member } from "@/lib/database.types";
 import { geocodeLocation } from "@/lib/geocode";
 import { CrewMap } from "@/components/CrewMap";
+import { parseSpotifyTrackId } from "@/lib/spotify";
 
 interface MembersContentProps {
   initialMembers: Member[];
@@ -37,6 +38,10 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
     city: "",
     state: "",
     country: "",
+    song_title: "",
+    song_artist: "",
+    song_spotify_id: "",
+    song_note: "",
   });
 
   async function uploadPhoto(
@@ -123,6 +128,10 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
         country: editForm.country || null,
         location_lat: coords?.lat ?? null,
         location_lng: coords?.lng ?? null,
+        song_title: editForm.song_title || null,
+        song_artist: editForm.song_artist || null,
+        song_spotify_id: parseSpotifyTrackId(editForm.song_spotify_id),
+        song_note: editForm.song_note || null,
       })
       .eq("id", editForm.id);
     setSaving(false);
@@ -203,6 +212,10 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
       location_lng: coords?.lng ?? null,
       sort_order: members.length,
       is_crew: true,
+      song_title: newMember.song_title || null,
+      song_artist: newMember.song_artist || null,
+      song_spotify_id: parseSpotifyTrackId(newMember.song_spotify_id),
+      song_note: newMember.song_note || null,
     });
     setSaving(false);
     setShowAddForm(false);
@@ -215,6 +228,10 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
       city: "",
       state: "",
       country: "",
+      song_title: "",
+      song_artist: "",
+      song_spotify_id: "",
+      song_note: "",
     });
     router.refresh();
   }
@@ -420,6 +437,61 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
                         className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-3 py-2 font-body text-sm text-rvno-ink focus:outline-none focus:border-[#C4853A]/50"
                       />
                     </div>
+                    <div className="pt-3 mt-1 border-t border-rvno-border">
+                      <p className="font-mono text-xs text-rvno-teal tracking-wide uppercase mb-2 font-medium">
+                        Favorite Song
+                      </p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <input
+                          type="text"
+                          value={editForm.song_title || ""}
+                          onChange={(e) =>
+                            setEditForm({ ...editForm, song_title: e.target.value })
+                          }
+                          placeholder="Song title"
+                          className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-3 py-2 font-body text-sm text-rvno-ink focus:outline-none focus:border-[#C4853A]/50"
+                        />
+                        <input
+                          type="text"
+                          value={editForm.song_artist || ""}
+                          onChange={(e) =>
+                            setEditForm({ ...editForm, song_artist: e.target.value })
+                          }
+                          placeholder="Artist"
+                          className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-3 py-2 font-body text-sm text-rvno-ink focus:outline-none focus:border-[#C4853A]/50"
+                        />
+                      </div>
+                      <input
+                        type="text"
+                        value={editForm.song_spotify_id || ""}
+                        onChange={(e) =>
+                          setEditForm({ ...editForm, song_spotify_id: e.target.value })
+                        }
+                        placeholder="Paste the Spotify link for the song"
+                        className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-3 py-2 font-body text-sm text-rvno-ink focus:outline-none focus:border-[#C4853A]/50 mt-2"
+                      />
+                      <input
+                        type="text"
+                        value={editForm.song_note || ""}
+                        onChange={(e) =>
+                          setEditForm({ ...editForm, song_note: e.target.value })
+                        }
+                        placeholder="Note (optional), e.g. submitted via Donna"
+                        className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-3 py-2 font-body text-sm text-rvno-ink focus:outline-none focus:border-[#C4853A]/50 mt-2"
+                      />
+                      {editForm.song_spotify_id ? (
+                        parseSpotifyTrackId(editForm.song_spotify_id) ? (
+                          <p className="font-body text-xs text-rvno-teal mt-1.5">
+                            Spotify link looks good.
+                          </p>
+                        ) : (
+                          <p className="font-body text-xs text-red-400 mt-1.5">
+                            That doesn&apos;t look like a Spotify track link. In Spotify: Share &rarr;
+                            Copy Song Link.
+                          </p>
+                        )
+                      ) : null}
+                    </div>
                   </div>
                   <div className="flex justify-between mt-4">
                     <button
@@ -510,6 +582,12 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
                     {getLocationDisplay(member) && (
                       <p className="font-body text-sm text-rvno-ink-dim mt-1">
                         📍 {getLocationDisplay(member)}
+                      </p>
+                    )}
+                    {member.song_title && (
+                      <p className="font-body text-sm text-rvno-ink-dim mt-1">
+                        🎵 {member.song_title}
+                        {member.song_artist ? ` — ${member.song_artist}` : ""}
                       </p>
                     )}
                   </div>
@@ -638,6 +716,61 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
                     />
                   </div>
                 </div>
+              </div>
+              <div className="pt-3 mt-1 border-t border-rvno-border">
+                <p className="font-mono text-xs text-rvno-teal tracking-wide uppercase mb-2 font-medium">
+                  Favorite Song
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="text"
+                    value={newMember.song_title || ""}
+                    onChange={(e) =>
+                      setNewMember({ ...newMember, song_title: e.target.value })
+                    }
+                    placeholder="Song title"
+                    className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-3 py-2 font-body text-sm text-rvno-ink focus:outline-none focus:border-[#C4853A]/50"
+                  />
+                  <input
+                    type="text"
+                    value={newMember.song_artist || ""}
+                    onChange={(e) =>
+                      setNewMember({ ...newMember, song_artist: e.target.value })
+                    }
+                    placeholder="Artist"
+                    className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-3 py-2 font-body text-sm text-rvno-ink focus:outline-none focus:border-[#C4853A]/50"
+                  />
+                </div>
+                <input
+                  type="text"
+                  value={newMember.song_spotify_id || ""}
+                  onChange={(e) =>
+                    setNewMember({ ...newMember, song_spotify_id: e.target.value })
+                  }
+                  placeholder="Paste the Spotify link for the song"
+                  className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-3 py-2 font-body text-sm text-rvno-ink focus:outline-none focus:border-[#C4853A]/50 mt-2"
+                />
+                <input
+                  type="text"
+                  value={newMember.song_note || ""}
+                  onChange={(e) =>
+                    setNewMember({ ...newMember, song_note: e.target.value })
+                  }
+                  placeholder="Note (optional), e.g. submitted via Donna"
+                  className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-3 py-2 font-body text-sm text-rvno-ink focus:outline-none focus:border-[#C4853A]/50 mt-2"
+                />
+                {newMember.song_spotify_id ? (
+                  parseSpotifyTrackId(newMember.song_spotify_id) ? (
+                    <p className="font-body text-xs text-rvno-teal mt-1.5">
+                      Spotify link looks good.
+                    </p>
+                  ) : (
+                    <p className="font-body text-xs text-red-400 mt-1.5">
+                      That doesn&apos;t look like a Spotify track link. In Spotify: Share &rarr;
+                      Copy Song Link.
+                    </p>
+                  )
+                ) : null}
               </div>
               <div className="flex justify-end gap-3 mt-4">
                 <button

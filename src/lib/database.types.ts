@@ -42,6 +42,10 @@ export type Member = {
   state: string | null;
   country: string | null;
   is_crew: boolean;
+  song_title: string | null;
+  song_artist: string | null;
+  song_spotify_id: string | null;
+  song_note: string | null;
   created_at: string;
 };
 
@@ -83,6 +87,10 @@ export type MemberInsert = {
   state?: string | null;
   country?: string | null;
   is_crew?: boolean;
+  song_title?: string | null;
+  song_artist?: string | null;
+  song_spotify_id?: string | null;
+  song_note?: string | null;
 };
 
 export type PageContent = {
