@@ -9,7 +9,7 @@ import type { Member } from "@/lib/database.types";
 import { geocodeLocation } from "@/lib/geocode";
 import { CrewMap } from "@/components/CrewMap";
 import { parseSpotifyTrackId } from "@/lib/spotify";
-import { SpotifyPlayer } from "@/components/SpotifyPlayer";
+import { MemberSongs } from "@/components/MemberSongs";
 
 interface MembersContentProps {
   initialMembers: Member[];
@@ -43,6 +43,11 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
     song_artist: "",
     song_spotify_id: "",
     song_note: "",
+    song_credit: "",
+    song2_title: "",
+    song2_artist: "",
+    song2_spotify_id: "",
+    song2_credit: "",
   });
 
   async function uploadPhoto(
@@ -133,6 +138,11 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
         song_artist: editForm.song_artist || null,
         song_spotify_id: parseSpotifyTrackId(editForm.song_spotify_id),
         song_note: editForm.song_note || null,
+        song_credit: editForm.song_credit || null,
+        song2_title: editForm.song2_title || null,
+        song2_artist: editForm.song2_artist || null,
+        song2_spotify_id: parseSpotifyTrackId(editForm.song2_spotify_id),
+        song2_credit: editForm.song2_credit || null,
       })
       .eq("id", editForm.id);
     setSaving(false);
@@ -217,6 +227,11 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
       song_artist: newMember.song_artist || null,
       song_spotify_id: parseSpotifyTrackId(newMember.song_spotify_id),
       song_note: newMember.song_note || null,
+      song_credit: newMember.song_credit || null,
+      song2_title: newMember.song2_title || null,
+      song2_artist: newMember.song2_artist || null,
+      song2_spotify_id: parseSpotifyTrackId(newMember.song2_spotify_id),
+      song2_credit: newMember.song2_credit || null,
     });
     setSaving(false);
     setShowAddForm(false);
@@ -233,6 +248,11 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
       song_artist: "",
       song_spotify_id: "",
       song_note: "",
+      song_credit: "",
+      song2_title: "",
+      song2_artist: "",
+      song2_spotify_id: "",
+      song2_credit: "",
     });
     router.refresh();
   }
@@ -492,6 +512,75 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
                           </p>
                         )
                       ) : null}
+                      {newMember.song_spotify_id ? (
+                  parseSpotifyTrackId(newMember.song_spotify_id) ? (
+                    <p className="font-body text-xs text-rvno-teal mt-1.5">
+                      Spotify link looks good.
+                    </p>
+                  ) : (
+                    <p className="font-body text-xs text-red-400 mt-1.5">
+                      That doesn&apos;t look like a Spotify track link. In Spotify: Share &rarr;
+                      Copy Song Link.
+                    </p>
+                  )
+                ) : null}
+              <div className="mt-3 pt-3 border-t border-dashed border-rvno-border">
+                      <p className="font-mono text-xs text-rvno-ink-dim tracking-wide uppercase mb-2">
+                        Joint cards only (couples)
+                      </p>
+                      <input
+                        type="text"
+                        value={editForm.song_credit || ""}
+                        onChange={(e) =>
+                          setEditForm({ ...editForm, song_credit: e.target.value })
+                        }
+                        placeholder="Who picked the song above? e.g. Barney"
+                        className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-3 py-2 font-body text-sm text-rvno-ink focus:outline-none focus:border-[#C4853A]/50"
+                      />
+                      <div className="grid grid-cols-2 gap-2 mt-2">
+                        <input
+                          type="text"
+                          value={editForm.song2_title || ""}
+                          onChange={(e) =>
+                            setEditForm({ ...editForm, song2_title: e.target.value })
+                          }
+                          placeholder="Second song title"
+                          className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-3 py-2 font-body text-sm text-rvno-ink focus:outline-none focus:border-[#C4853A]/50"
+                        />
+                        <input
+                          type="text"
+                          value={editForm.song2_artist || ""}
+                          onChange={(e) =>
+                            setEditForm({ ...editForm, song2_artist: e.target.value })
+                          }
+                          placeholder="Second song artist"
+                          className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-3 py-2 font-body text-sm text-rvno-ink focus:outline-none focus:border-[#C4853A]/50"
+                        />
+                      </div>
+                      <input
+                        type="text"
+                        value={editForm.song2_spotify_id || ""}
+                        onChange={(e) =>
+                          setEditForm({ ...editForm, song2_spotify_id: e.target.value })
+                        }
+                        placeholder="Spotify link for the second song"
+                        className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-3 py-2 font-body text-sm text-rvno-ink focus:outline-none focus:border-[#C4853A]/50 mt-2"
+                      />
+                      <input
+                        type="text"
+                        value={editForm.song2_credit || ""}
+                        onChange={(e) =>
+                          setEditForm({ ...editForm, song2_credit: e.target.value })
+                        }
+                        placeholder="Who picked the second song? e.g. Maggie"
+                        className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-3 py-2 font-body text-sm text-rvno-ink focus:outline-none focus:border-[#C4853A]/50 mt-2"
+                      />
+                      {editForm.song2_spotify_id && !parseSpotifyTrackId(editForm.song2_spotify_id) && (
+                        <p className="font-body text-xs text-red-400 mt-1.5">
+                          That doesn&apos;t look like a Spotify track link.
+                        </p>
+                      )}
+                    </div>
                     </div>
                   </div>
                   <div className="flex justify-between mt-4">
@@ -585,29 +674,11 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
                         📍 {getLocationDisplay(member)}
                       </p>
                     )}
-                    {member.song_title && (
-                      <div className="mt-3">
-                        <p className="font-body text-sm text-rvno-ink-muted">
-                          🎵 <span className="italic">{member.song_title}</span>
-                          {member.song_artist ? ` — ${member.song_artist}` : ""}
-                        </p>
-                        {member.song_note && (
-                          <p className="font-body text-xs text-rvno-ink-dim italic mt-0.5">
-                            {member.song_note}
-                          </p>
-                        )}
-                        {member.song_spotify_id && !isReordering && (
-                          <SpotifyPlayer
-                            trackId={member.song_spotify_id}
-                            variant="compact"
-                            className="mt-2"
-                            title={`${member.song_title}${
-                              member.song_artist ? ` — ${member.song_artist}` : ""
-                            }`}
-                          />
-                        )}
-                      </div>
-                    )}
+                    <MemberSongs
+                      member={member}
+                      showPlayers={!isReordering}
+                      className="mt-3"
+                    />
                   </div>
 
                   {isAdmin && !isReordering && (
@@ -777,18 +848,63 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
                   placeholder="Note (optional), e.g. submitted via Donna"
                   className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-3 py-2 font-body text-sm text-rvno-ink focus:outline-none focus:border-[#C4853A]/50 mt-2"
                 />
-                {newMember.song_spotify_id ? (
-                  parseSpotifyTrackId(newMember.song_spotify_id) ? (
-                    <p className="font-body text-xs text-rvno-teal mt-1.5">
-                      Spotify link looks good.
-                    </p>
-                  ) : (
-                    <p className="font-body text-xs text-red-400 mt-1.5">
-                      That doesn&apos;t look like a Spotify track link. In Spotify: Share &rarr;
-                      Copy Song Link.
-                    </p>
-                  )
-                ) : null}
+              <div className="mt-3 pt-3 border-t border-dashed border-rvno-border">
+                <p className="font-mono text-xs text-rvno-ink-dim tracking-wide uppercase mb-2">
+                  Joint cards only (couples)
+                </p>
+                <input
+                  type="text"
+                  value={newMember.song_credit || ""}
+                  onChange={(e) =>
+                    setNewMember({ ...newMember, song_credit: e.target.value })
+                  }
+                  placeholder="Who picked the song above? e.g. Barney"
+                  className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-3 py-2 font-body text-sm text-rvno-ink focus:outline-none focus:border-[#C4853A]/50"
+                />
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                  <input
+                    type="text"
+                    value={newMember.song2_title || ""}
+                    onChange={(e) =>
+                      setNewMember({ ...newMember, song2_title: e.target.value })
+                    }
+                    placeholder="Second song title"
+                    className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-3 py-2 font-body text-sm text-rvno-ink focus:outline-none focus:border-[#C4853A]/50"
+                  />
+                  <input
+                    type="text"
+                    value={newMember.song2_artist || ""}
+                    onChange={(e) =>
+                      setNewMember({ ...newMember, song2_artist: e.target.value })
+                    }
+                    placeholder="Second song artist"
+                    className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-3 py-2 font-body text-sm text-rvno-ink focus:outline-none focus:border-[#C4853A]/50"
+                  />
+                </div>
+                <input
+                  type="text"
+                  value={newMember.song2_spotify_id || ""}
+                  onChange={(e) =>
+                    setNewMember({ ...newMember, song2_spotify_id: e.target.value })
+                  }
+                  placeholder="Spotify link for the second song"
+                  className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-3 py-2 font-body text-sm text-rvno-ink focus:outline-none focus:border-[#C4853A]/50 mt-2"
+                />
+                <input
+                  type="text"
+                  value={newMember.song2_credit || ""}
+                  onChange={(e) =>
+                    setNewMember({ ...newMember, song2_credit: e.target.value })
+                  }
+                  placeholder="Who picked the second song? e.g. Maggie"
+                  className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-3 py-2 font-body text-sm text-rvno-ink focus:outline-none focus:border-[#C4853A]/50 mt-2"
+                />
+                {newMember.song2_spotify_id && !parseSpotifyTrackId(newMember.song2_spotify_id) && (
+                  <p className="font-body text-xs text-red-400 mt-1.5">
+                    That doesn&apos;t look like a Spotify track link.
+                  </p>
+                )}
+              </div>
               </div>
               <div className="flex justify-end gap-3 mt-4">
                 <button

@@ -3,8 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { Member } from "@/lib/database.types";
-import { SpotifyPlayer } from "@/components/SpotifyPlayer";
-import { spotifyTrackUrl } from "@/lib/spotify";
+import { MemberSongs } from "@/components/MemberSongs";
 
 interface JukeboxContentProps {
   initialMembers: Member[];
@@ -26,7 +25,16 @@ export function JukeboxContent({ initialMembers }: JukeboxContentProps) {
     const q = query.trim().toLowerCase();
     if (!q) return initialMembers;
     return initialMembers.filter((m) =>
-      [m.name, m.song_title, m.song_artist, m.title]
+      [
+        m.name,
+        m.song_title,
+        m.song_artist,
+        m.song_credit,
+        m.song2_title,
+        m.song2_artist,
+        m.song2_credit,
+        m.title,
+      ]
         .filter(Boolean)
         .some((field) => (field as string).toLowerCase().includes(q))
     );
@@ -39,7 +47,7 @@ export function JukeboxContent({ initialMembers }: JukeboxContentProps) {
           The Jukebox
         </h1>
         <p className="font-body text-base text-rvno-ink-muted italic mt-2">
-          Everybody gets one song. These are the ones they picked.
+          Everybody picks a song. These are theirs.
         </p>
       </header>
 
@@ -102,47 +110,10 @@ export function JukeboxContent({ initialMembers }: JukeboxContentProps) {
                           {member.title}
                         </p>
                       )}
-                      <p className="font-body text-base text-rvno-ink-muted mt-2 leading-snug">
-                        <span className="italic">{member.song_title}</span>
-                        {member.song_artist && (
-                          <>
-                            <br />
-                            <span className="text-rvno-ink-dim text-sm">
-                              {member.song_artist}
-                            </span>
-                          </>
-                        )}
-                      </p>
-                      {member.song_note && (
-                        <p className="font-body text-xs text-rvno-ink-dim italic mt-1">
-                          {member.song_note}
-                        </p>
-                      )}
                     </div>
                   </div>
 
-                  {member.song_spotify_id ? (
-                    <SpotifyPlayer
-                      trackId={member.song_spotify_id}
-                      variant="compact"
-                      title={`${member.song_title} — ${member.song_artist ?? ""}`}
-                    />
-                  ) : (
-                    <p className="font-body text-sm text-rvno-ink-dim">
-                      No player for this one yet.
-                    </p>
-                  )}
-
-                  {member.song_spotify_id && (
-                    <a
-                      href={spotifyTrackUrl(member.song_spotify_id)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-body text-xs text-rvno-ink-dim hover:text-rvno-teal transition-colors self-start"
-                    >
-                      Open in Spotify &rarr;
-                    </a>
-                  )}
+                  <MemberSongs member={member} />
                 </div>
               ))}
             </div>

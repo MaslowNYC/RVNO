@@ -46,6 +46,11 @@ export type Member = {
   song_artist: string | null;
   song_spotify_id: string | null;
   song_note: string | null;
+  song_credit: string | null;
+  song2_title: string | null;
+  song2_artist: string | null;
+  song2_spotify_id: string | null;
+  song2_credit: string | null;
   created_at: string;
 };
 
@@ -91,6 +96,11 @@ export type MemberInsert = {
   song_artist?: string | null;
   song_spotify_id?: string | null;
   song_note?: string | null;
+  song_credit?: string | null;
+  song2_title?: string | null;
+  song2_artist?: string | null;
+  song2_spotify_id?: string | null;
+  song2_credit?: string | null;
 };
 
 export type PageContent = {
