@@ -9,7 +9,6 @@ import type { Member } from "@/lib/database.types";
 import { geocodeLocation } from "@/lib/geocode";
 import { CrewMap } from "@/components/CrewMap";
 import { parseSpotifyTrackId } from "@/lib/spotify";
-import { MemberSongs } from "@/components/MemberSongs";
 
 interface MembersContentProps {
   initialMembers: Member[];
@@ -674,11 +673,6 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
                         📍 {getLocationDisplay(member)}
                       </p>
                     )}
-                    <MemberSongs
-                      member={member}
-                      showPlayers={!isReordering}
-                      className="mt-3"
-                    />
                   </div>
 
                   {isAdmin && !isReordering && (
