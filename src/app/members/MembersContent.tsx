@@ -295,8 +295,13 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
         <p className="font-body text-base text-rvno-ink-muted italic mt-2">
           {showMap
             ? "Where we roam"
-            : "We don't have high standards but we do have minimums. The following have qualified:"}
+            : "We don't have high standards but we do have minimums."}
         </p>
+        {!showMap && (
+          <p className="font-body text-sm text-rvno-ink-dim italic mt-1">
+            The following have qualified:
+          </p>
+        )}
         {isAdmin && !showMap && members.length > 1 && (
           <div className="mt-4">
             {isReordering ? (
