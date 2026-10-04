@@ -15,7 +15,7 @@ export function Footer() {
         <div className="flex flex-wrap justify-center md:justify-start gap-4 sm:gap-8">
           {[
             { href: "/about", label: "About" },
-            { href: "/members", label: "The Crew" },
+            { href: "/members", label: "Members" },
             { href: "/contact", label: "Contact" },
           ].map((link) => (
             <Link

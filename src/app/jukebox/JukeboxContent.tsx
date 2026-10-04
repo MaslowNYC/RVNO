@@ -56,7 +56,7 @@ export function JukeboxContent({ initialMembers }: JukeboxContentProps) {
           <p className="font-body text-base text-rvno-ink-dim">
             No songs yet. Add one from a member&apos;s card over on{" "}
             <Link href="/members" className="text-rvno-teal">
-              The Crew
+              Members
             </Link>
             .
           </p>
