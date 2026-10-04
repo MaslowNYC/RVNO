@@ -266,7 +266,7 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
       <header className="mb-10 text-center">
         <div className="flex items-center justify-center gap-3">
           <h1 className="font-display text-3xl font-bold text-rvno-ink">
-            The Usual Suspects
+            Membership Requirements
           </h1>
           <button
             onClick={() => setShowMap(!showMap)}
@@ -275,27 +275,27 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
           >
             <svg
               viewBox="0 0 24 24"
-              className={`w-8 h-8 transition-colors animate-globe-spin ${
+              className={`w-8 h-8 transition-colors ${
                 showMap ? "text-[#C4853A]" : "text-rvno-teal hover:text-[#C4853A]"
               }`}
               fill="none"
               stroke="currentColor"
               strokeWidth="1.5"
+              strokeLinejoin="round"
+              strokeLinecap="round"
             >
-              {/* Globe */}
-              <circle cx="12" cy="12" r="10" />
-              {/* Latitude lines */}
-              <ellipse cx="12" cy="12" rx="10" ry="4" />
-              <ellipse cx="12" cy="12" rx="10" ry="7" />
-              {/* Longitude line */}
-              <ellipse cx="12" cy="12" rx="4" ry="10" />
-              {/* Center vertical */}
-              <line x1="12" y1="2" x2="12" y2="22" />
+              {/* Folded road map — three panels, accordion folds */}
+              <path d="M1 6 L1 22 L8 18 L16 22 L23 18 L23 2 L16 6 L8 2 Z" />
+              {/* Creases */}
+              <line x1="8" y1="2" x2="8" y2="18" />
+              <line x1="16" y1="6" x2="16" y2="22" />
             </svg>
           </button>
         </div>
         <p className="font-body text-base text-rvno-ink-muted italic mt-2">
-          {showMap ? "Where we roam" : "The people behind the Nortons"}
+          {showMap
+            ? "Where we roam"
+            : "We don't have requirements and our standards are low."}
         </p>
         {isAdmin && !showMap && members.length > 1 && (
           <div className="mt-4">
