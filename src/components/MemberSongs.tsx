@@ -2,6 +2,7 @@
 
 import type { Member } from "@/lib/database.types";
 import { SpotifyPlayer } from "@/components/SpotifyPlayer";
+import { youtubeWatchUrl } from "@/lib/youtube";
 
 /**
  * Renders a member's favorite song(s).
@@ -14,6 +15,7 @@ import { SpotifyPlayer } from "@/components/SpotifyPlayer";
 type Pick = {
   title: string;
   artist: string | null;
+  youtubeId: string | null;
   spotifyId: string | null;
   credit: string | null;
   note: string | null;
@@ -25,6 +27,7 @@ export function songsFor(member: Member): Pick[] {
     picks.push({
       title: member.song_title,
       artist: member.song_artist,
+      youtubeId: member.song_youtube_id,
       spotifyId: member.song_spotify_id,
       credit: member.song_credit,
       note: member.song_note,
@@ -34,6 +37,7 @@ export function songsFor(member: Member): Pick[] {
     picks.push({
       title: member.song2_title,
       artist: member.song2_artist,
+      youtubeId: member.song2_youtube_id,
       spotifyId: member.song2_spotify_id,
       credit: member.song2_credit,
       note: null,
@@ -76,13 +80,23 @@ export function MemberSongs({
               {pick.note}
             </p>
           )}
-          {pick.spotifyId && showPlayers && (
+          {showPlayers && pick.spotifyId && (
             <SpotifyPlayer
               trackId={pick.spotifyId}
               variant="compact"
               className="mt-2"
               title={`${pick.title}${pick.artist ? ` — ${pick.artist}` : ""}`}
             />
+          )}
+          {pick.youtubeId && (
+            <a
+              href={youtubeWatchUrl(pick.youtubeId)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block font-body text-xs text-rvno-ink-dim hover:text-rvno-teal transition-colors mt-1.5"
+            >
+              Hear the whole song on YouTube &rarr;
+            </a>
           )}
         </div>
       ))}

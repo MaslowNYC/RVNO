@@ -51,6 +51,8 @@ export type Member = {
   song2_artist: string | null;
   song2_spotify_id: string | null;
   song2_credit: string | null;
+  song_youtube_id: string | null;
+  song2_youtube_id: string | null;
   created_at: string;
 };
 
@@ -101,6 +103,8 @@ export type MemberInsert = {
   song2_artist?: string | null;
   song2_spotify_id?: string | null;
   song2_credit?: string | null;
+  song_youtube_id?: string | null;
+  song2_youtube_id?: string | null;
 };
 
 export type PageContent = {

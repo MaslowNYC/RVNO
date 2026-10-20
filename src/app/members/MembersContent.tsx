@@ -8,7 +8,8 @@ import { useRouter } from "next/navigation";
 import type { Member } from "@/lib/database.types";
 import { geocodeLocation } from "@/lib/geocode";
 import { CrewMap } from "@/components/CrewMap";
-import { parseSpotifyTrackId } from "@/lib/spotify";
+import { parseSpotifyTrackId, spotifyTrackUrl } from "@/lib/spotify";
+import { parseYouTubeId, youtubeWatchUrl } from "@/lib/youtube";
 
 interface MembersContentProps {
   initialMembers: Member[];
@@ -23,6 +24,16 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Member>>({});
   const [saving, setSaving] = useState(false);
+  // The link boxes hold raw text until save, when the ids are parsed out.
+  // Spotify plays inline; YouTube is a link out, so they're separate fields.
+  const [songSpotify, setSongSpotify] = useState("");
+  const [songYouTube, setSongYouTube] = useState("");
+  const [song2Spotify, setSong2Spotify] = useState("");
+  const [song2YouTube, setSong2YouTube] = useState("");
+  const [newSongSpotify, setNewSongSpotify] = useState("");
+  const [newSongYouTube, setNewSongYouTube] = useState("");
+  const [newSong2Spotify, setNewSong2Spotify] = useState("");
+  const [newSong2YouTube, setNewSong2YouTube] = useState("");
   const [uploading, setUploading] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [isReordering, setIsReordering] = useState(false);
@@ -103,11 +114,27 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
   function startEdit(member: Member) {
     setEditingId(member.id);
     setEditForm({ ...member });
+    setSongSpotify(
+      member.song_spotify_id ? spotifyTrackUrl(member.song_spotify_id) : ""
+    );
+    setSongYouTube(
+      member.song_youtube_id ? youtubeWatchUrl(member.song_youtube_id) : ""
+    );
+    setSong2Spotify(
+      member.song2_spotify_id ? spotifyTrackUrl(member.song2_spotify_id) : ""
+    );
+    setSong2YouTube(
+      member.song2_youtube_id ? youtubeWatchUrl(member.song2_youtube_id) : ""
+    );
   }
 
   function cancelEdit() {
     setEditingId(null);
     setEditForm({});
+    setSongSpotify("");
+    setSongYouTube("");
+    setSong2Spotify("");
+    setSong2YouTube("");
   }
 
   async function saveMember() {
@@ -135,12 +162,14 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
         location_lng: coords?.lng ?? null,
         song_title: editForm.song_title || null,
         song_artist: editForm.song_artist || null,
-        song_spotify_id: parseSpotifyTrackId(editForm.song_spotify_id),
+        song_spotify_id: parseSpotifyTrackId(songSpotify),
+        song_youtube_id: parseYouTubeId(songYouTube),
         song_note: editForm.song_note || null,
         song_credit: editForm.song_credit || null,
         song2_title: editForm.song2_title || null,
         song2_artist: editForm.song2_artist || null,
-        song2_spotify_id: parseSpotifyTrackId(editForm.song2_spotify_id),
+        song2_spotify_id: parseSpotifyTrackId(song2Spotify),
+        song2_youtube_id: parseYouTubeId(song2YouTube),
         song2_credit: editForm.song2_credit || null,
       })
       .eq("id", editForm.id);
@@ -224,16 +253,22 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
       is_crew: true,
       song_title: newMember.song_title || null,
       song_artist: newMember.song_artist || null,
-      song_spotify_id: parseSpotifyTrackId(newMember.song_spotify_id),
+      song_spotify_id: parseSpotifyTrackId(newSongSpotify),
+      song_youtube_id: parseYouTubeId(newSongYouTube),
       song_note: newMember.song_note || null,
       song_credit: newMember.song_credit || null,
       song2_title: newMember.song2_title || null,
       song2_artist: newMember.song2_artist || null,
-      song2_spotify_id: parseSpotifyTrackId(newMember.song2_spotify_id),
+      song2_spotify_id: parseSpotifyTrackId(newSong2Spotify),
+      song2_youtube_id: parseYouTubeId(newSong2YouTube),
       song2_credit: newMember.song2_credit || null,
     });
     setSaving(false);
     setShowAddForm(false);
+    setNewSongSpotify("");
+    setNewSongYouTube("");
+    setNewSong2Spotify("");
+    setNewSong2YouTube("");
     setNewMember({
       name: "",
       title: "",
@@ -488,13 +523,28 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
                       </div>
                       <input
                         type="text"
-                        value={editForm.song_spotify_id || ""}
-                        onChange={(e) =>
-                          setEditForm({ ...editForm, song_spotify_id: e.target.value })
-                        }
-                        placeholder="Paste the Spotify link for the song"
+                        value={songSpotify}
+                        onChange={(e) => setSongSpotify(e.target.value)}
+                        placeholder="Spotify link — plays on the page"
                         className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-3 py-2 font-body text-sm text-rvno-ink focus:outline-none focus:border-[#C4853A]/50 mt-2"
                       />
+                      {songSpotify.trim() && !parseSpotifyTrackId(songSpotify) && (
+                        <p className="font-body text-xs text-red-400 mt-1.5">
+                          That doesn&apos;t look like a Spotify song link.
+                        </p>
+                      )}
+                      <input
+                        type="text"
+                        value={songYouTube}
+                        onChange={(e) => setSongYouTube(e.target.value)}
+                        placeholder="YouTube link — opens in a new tab (optional)"
+                        className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-3 py-2 font-body text-sm text-rvno-ink focus:outline-none focus:border-[#C4853A]/50 mt-2"
+                      />
+                      {songYouTube.trim() && !parseYouTubeId(songYouTube) && (
+                        <p className="font-body text-xs text-red-400 mt-1.5">
+                          That doesn&apos;t look like a YouTube link.
+                        </p>
+                      )}
                       <input
                         type="text"
                         value={editForm.song_note || ""}
@@ -504,30 +554,6 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
                         placeholder="Note (optional), e.g. submitted via Donna"
                         className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-3 py-2 font-body text-sm text-rvno-ink focus:outline-none focus:border-[#C4853A]/50 mt-2"
                       />
-                      {editForm.song_spotify_id ? (
-                        parseSpotifyTrackId(editForm.song_spotify_id) ? (
-                          <p className="font-body text-xs text-rvno-teal mt-1.5">
-                            Spotify link looks good.
-                          </p>
-                        ) : (
-                          <p className="font-body text-xs text-red-400 mt-1.5">
-                            That doesn&apos;t look like a Spotify track link. In Spotify: Share &rarr;
-                            Copy Song Link.
-                          </p>
-                        )
-                      ) : null}
-                      {newMember.song_spotify_id ? (
-                  parseSpotifyTrackId(newMember.song_spotify_id) ? (
-                    <p className="font-body text-xs text-rvno-teal mt-1.5">
-                      Spotify link looks good.
-                    </p>
-                  ) : (
-                    <p className="font-body text-xs text-red-400 mt-1.5">
-                      That doesn&apos;t look like a Spotify track link. In Spotify: Share &rarr;
-                      Copy Song Link.
-                    </p>
-                  )
-                ) : null}
               <div className="mt-3 pt-3 border-t border-dashed border-rvno-border">
                       <p className="font-mono text-xs text-rvno-ink-dim tracking-wide uppercase mb-2">
                         Joint cards only (couples)
@@ -563,10 +589,8 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
                       </div>
                       <input
                         type="text"
-                        value={editForm.song2_spotify_id || ""}
-                        onChange={(e) =>
-                          setEditForm({ ...editForm, song2_spotify_id: e.target.value })
-                        }
+                        value={song2Spotify}
+                        onChange={(e) => setSong2Spotify(e.target.value)}
                         placeholder="Spotify link for the second song"
                         className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-3 py-2 font-body text-sm text-rvno-ink focus:outline-none focus:border-[#C4853A]/50 mt-2"
                       />
@@ -579,11 +603,13 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
                         placeholder="Who picked the second song? e.g. Maggie"
                         className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-3 py-2 font-body text-sm text-rvno-ink focus:outline-none focus:border-[#C4853A]/50 mt-2"
                       />
-                      {editForm.song2_spotify_id && !parseSpotifyTrackId(editForm.song2_spotify_id) && (
-                        <p className="font-body text-xs text-red-400 mt-1.5">
-                          That doesn&apos;t look like a Spotify track link.
-                        </p>
-                      )}
+                      <input
+                        type="text"
+                        value={song2YouTube}
+                        onChange={(e) => setSong2YouTube(e.target.value)}
+                        placeholder="YouTube link for the second song (optional)"
+                        className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-3 py-2 font-body text-sm text-rvno-ink focus:outline-none focus:border-[#C4853A]/50 mt-2"
+                      />
                     </div>
                     </div>
                   </div>
@@ -831,11 +857,9 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
                 </div>
                 <input
                   type="text"
-                  value={newMember.song_spotify_id || ""}
-                  onChange={(e) =>
-                    setNewMember({ ...newMember, song_spotify_id: e.target.value })
-                  }
-                  placeholder="Paste the Spotify link for the song"
+                  value={newSongSpotify}
+                  onChange={(e) => setNewSongSpotify(e.target.value)}
+                  placeholder="Spotify link — plays on the page"
                   className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-3 py-2 font-body text-sm text-rvno-ink focus:outline-none focus:border-[#C4853A]/50 mt-2"
                 />
                 <input
@@ -847,6 +871,23 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
                   placeholder="Note (optional), e.g. submitted via Donna"
                   className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-3 py-2 font-body text-sm text-rvno-ink focus:outline-none focus:border-[#C4853A]/50 mt-2"
                 />
+                <input
+                  type="text"
+                  value={newSongYouTube}
+                  onChange={(e) => setNewSongYouTube(e.target.value)}
+                  placeholder="YouTube link — opens in a new tab (optional)"
+                  className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-3 py-2 font-body text-sm text-rvno-ink focus:outline-none focus:border-[#C4853A]/50 mt-2"
+                />
+                {newSongSpotify.trim() && !parseSpotifyTrackId(newSongSpotify) && (
+                  <p className="font-body text-xs text-red-400 mt-1.5">
+                    That doesn&apos;t look like a Spotify song link.
+                  </p>
+                )}
+                {newSongYouTube.trim() && !parseYouTubeId(newSongYouTube) && (
+                  <p className="font-body text-xs text-red-400 mt-1.5">
+                    That doesn&apos;t look like a YouTube link.
+                  </p>
+                )}
               <div className="mt-3 pt-3 border-t border-dashed border-rvno-border">
                 <p className="font-mono text-xs text-rvno-ink-dim tracking-wide uppercase mb-2">
                   Joint cards only (couples)
@@ -882,10 +923,8 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
                 </div>
                 <input
                   type="text"
-                  value={newMember.song2_spotify_id || ""}
-                  onChange={(e) =>
-                    setNewMember({ ...newMember, song2_spotify_id: e.target.value })
-                  }
+                  value={newSong2Spotify}
+                  onChange={(e) => setNewSong2Spotify(e.target.value)}
                   placeholder="Spotify link for the second song"
                   className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-3 py-2 font-body text-sm text-rvno-ink focus:outline-none focus:border-[#C4853A]/50 mt-2"
                 />
@@ -898,11 +937,13 @@ export function MembersContent({ initialMembers }: MembersContentProps) {
                   placeholder="Who picked the second song? e.g. Maggie"
                   className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-3 py-2 font-body text-sm text-rvno-ink focus:outline-none focus:border-[#C4853A]/50 mt-2"
                 />
-                {newMember.song2_spotify_id && !parseSpotifyTrackId(newMember.song2_spotify_id) && (
-                  <p className="font-body text-xs text-red-400 mt-1.5">
-                    That doesn&apos;t look like a Spotify track link.
-                  </p>
-                )}
+                <input
+                  type="text"
+                  value={newSong2YouTube}
+                  onChange={(e) => setNewSong2YouTube(e.target.value)}
+                  placeholder="YouTube link for the second song (optional)"
+                  className="w-full bg-rvno-elevated border border-rvno-border rounded-lg px-3 py-2 font-body text-sm text-rvno-ink focus:outline-none focus:border-[#C4853A]/50 mt-2"
+                />
               </div>
               </div>
               <div className="flex justify-end gap-3 mt-4">
